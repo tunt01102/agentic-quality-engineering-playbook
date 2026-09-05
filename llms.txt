@@ -6,6 +6,7 @@
 - [WORKFLOW.md](WORKFLOW.md): the daily loop (plan, fresh executor sessions, end-of-day review), predicates, controls in order of trust, estimates measured
 - [PRINCIPLES.md](PRINCIPLES.md): working rules with reasons; read before acting in this style
 - [LESSONS.md](LESSONS.md): failure classes in what happened / cause / fix / prevention form
+- [VERIFICATION.md](VERIFICATION.md): the false-green family — record the mechanism behind a pass, make success distinguishable from a not-yet-started world, prove a check can fail, measure the outcome and not the gate, let a missing thing stay a finding
 - [TIPS.md](TIPS.md): general tips for working with an AI assistant, each with why and how
 
 ## Reuse

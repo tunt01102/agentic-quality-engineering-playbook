@@ -107,5 +107,30 @@ should treat the reasons as the rule; the wording is just the current form.
 31. **Save state before stopping: what is done, what is next, and why.** Because: sessions end and
     machines change; a resume note in a synced place saved a full day's context once.
 
-See [LESSONS.md](LESSONS.md) for the incident classes behind these in what happened / cause / fix /
-prevention form, and [TIPS.md](TIPS.md) for the general version anyone can apply.
+## G. Generating code and trusting results
+
+32. **Look at the real system before writing code against a description of it.** Capture its live state
+    at the moment it is complete, and treat that capture as ground truth outranking the prose. Because: a
+    generator given a snapshot taken too early wrote fluent code against names that did not exist.
+33. **A named thing that is not there is a finding, not an obstacle.** Stop, mark the step skipped with
+    the reason, report it. Never substitute the closest similar thing. Because: a substitution converts a
+    real defect in the product, or a real error in the specification, into a passing run nobody revisits.
+34. **Every result records the mechanism that produced it.** If a run can succeed by more than one route
+    (retry, cache, fallback, degraded mode), the route is part of the result and can be gated on. Because:
+    a status column that said only "passed" was green for weeks while every green came from a rescue path.
+35. **Prove that a check can fail.** Break its subject deliberately once, when the check is written, and
+    confirm it goes red. Because: repetition proves stability, not correctness, and a check that survives
+    the removal of what it watches is measuring nothing.
+36. **State the last round's return before funding the next one.** Cost, measured return, expected return.
+    Because: two identical rounds of enrichment returned nine and then four, and only the second was
+    obviously waste in hindsight.
+37. **Improving a source and refreshing the copies consumers read is one act, not two.** Because: a
+    refresh step that a human must remember was skipped, and a corrected source reached nobody for days.
+38. **Writes stay inside the repository being worked on; anything global is proposed, never done.**
+    Machine-wide settings, credentials, scheduled jobs and other repositories are the human's to change.
+    Because: on a machine holding several projects, one project's automation overwrote another's source
+    file.
+
+See [VERIFICATION.md](VERIFICATION.md) for the long form of rules 33 to 37, [LESSONS.md](LESSONS.md) for
+the incident classes behind these in what happened / cause / fix / prevention form, and [TIPS.md](TIPS.md) for the general version anyone can
+apply.

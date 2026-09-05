@@ -176,3 +176,52 @@ produced them keeps its own dated, numbered version privately.
   it pauses with a checkpoint and a resume job kicks it after the reset.
 - **Prevention:** Every job has a cost cap and a wall-clock cap as independent brakes; each daily slot is a
   fresh session so no single session can run out midway.
+
+## Generated artefacts, configuration and shared machines
+
+### A protection rule that ends up protecting generated junk
+- **What happened:** A rule forbade overwriting existing source files, so that hand-written work could
+  never be clobbered by a generator. Months later the tree held several hundred generated files and only a
+  handful of hand-written ones, and the rule was preserving the wrong set. One bad generated file, frozen
+  by the rule, was reused by everything downstream and broke a fifth of all subsequent runs.
+- **Cause:** The rule keyed on "does this file exist", which was a good proxy for "a human wrote this" on
+  day one and a useless one by month three.
+- **Fix:** Record provenance when a file is written (who or what generated it, from which input, when),
+  and let the protection rule key on provenance instead of existence.
+- **Prevention:** Any rule whose subject is "existing files" is dated the day the first generator lands;
+  re-derive the proportion of generated to hand-written files before trusting it again. See also
+  [VERIFICATION.md](VERIFICATION.md) on results that stop carrying information.
+
+### The same setting in two stores, with a different reader for each
+- **What happened:** A target environment was configured in a file and also in a database row. One runner
+  read the file, another read the row. They disagreed for weeks, during which a whole scheduled suite ran
+  zero tests every night and reported no failures, because "no valid target" was handled as a skip.
+- **Cause:** A value duplicated across two stores with no test that they agree, plus a skip path that
+  looked identical to a clean run.
+- **Fix:** Correct both stores, and add a test that fails when the two disagree.
+- **Prevention:** When a value must live in two places, the consistency check is written in the same
+  change that creates the duplication, never later. A skip is reported as a distinct outcome from a pass.
+
+### A workaround built for a capability the system already had
+- **What happened:** A step was believed to require a human at the keyboard, and effort went into
+  scheduling around that constraint. The product turned out to expose a documented switch that made the
+  step unattended, and the repository already contained a function that used it, written earlier and never
+  called.
+- **Cause:** The constraint was inherited as folklore and never retested; nobody searched the repository
+  for prior art before building around it.
+- **Fix:** Test the constraint directly in three variants, then call the function that already existed.
+- **Prevention:** Before building any workaround, two cheap checks first: search the repository for
+  something that already does it, and re-run the experiment that established the constraint. Write the
+  date the constraint was last verified next to the rule that assumes it.
+
+### One machine, several projects, one careless write
+- **What happened:** An automated step in one project wrote a template into a path belonging to a
+  different project on the same machine, overwriting a source file there. The other project recovered from
+  version control, which is the only reason it was cheap.
+- **Cause:** The assistant's file operations were bounded by intent, not by a path fence, and a
+  path built from configuration escaped the working repository.
+- **Fix:** A pre-execution guard that refuses writes outside the repository in hand, and a resolver that
+  every configuration-derived path must pass through.
+- **Prevention:** Stated as a rule as well as a mechanism, because neither is complete: writes stay inside
+  the repository being worked on, and anything global — machine-wide settings, credentials, scheduled jobs,
+  another repository — is proposed to the human and never done silently.

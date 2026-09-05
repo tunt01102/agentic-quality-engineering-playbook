@@ -141,10 +141,42 @@ describe the class of situation, never a project, product, ticket or person.
   saying "ready".
 - Evidence: a day's report was missing from the file the human actually used.
 
-## 5. For the assistant reading this
+## 5. Do not fool yourself
+
+### Ask what would make this pass for the wrong reason
+- Why: an assistant satisfies the signal you gave it, so a signal that is easy to satisfy gets satisfied
+  instead of the goal. Most false confidence comes from a check that cannot fail rather than from a lie.
+- How: for each check that matters, name the state in which it would pass while the system is broken —
+  nothing rendered yet, no data found, a fallback rescued it, the baseline was written by the check
+  itself — and remove that state. Then break the subject once on purpose and watch the check go red.
+- Evidence: a status field that reported only success or failure hid that every recent success had come
+  from a last-resort path; a check reran green for weeks while measuring something other than its name.
+
+### Count twice, with two methods, before believing a number
+- Why: the measuring instrument is code with its own bugs, and a wrong number that looks plausible is
+  worse than no number. Shells word-split differently, logs rank history rather than today, a wait that
+  searches for a pattern matches itself, and a service started before your fix is not evidence about it.
+- How: when a number decides something, get it a second way and reconcile the two. Cut every log window to
+  the run under study. Wait on evidence the work produced, not on a pattern that includes your own command.
+- Evidence: a counting command gave a confident wrong answer in one shell and the right one in another.
+
+### Check the constraint is still real before building around it
+- Why: constraints become folklore. "This needs a human" or "the platform cannot do that" is repeated for
+  months after it stopped being true, and the workaround costs more than the retest would have.
+- How: two cheap checks before any workaround. Search the repository for something that already does it,
+  and rerun the experiment that established the constraint. Write next to the rule the date it was last
+  verified.
+- Evidence: a step believed to need a person turned out to have a documented switch, already used by an
+  unused function sitting in the same repository.
+
+## 6. For the assistant reading this
 
 - Read the reasons, not just the rules. When a rule and its reason disagree in a new situation, the reason
   wins and the human is asked.
 - Prefer a smaller verified result to a larger unverified one.
 - Write your main output early and update it; treat every turn as possibly the last.
 - End every unattended run with one line the human can act on: done / not done / blocked / needs decision.
+- When the thing you were told to use is not there, say so and stop. The closest similar thing is never
+  the answer; a substitution hides a real defect behind a passing run.
+- Report which route produced the result: the intended path, a retry, a cache, a fallback. A bare "it
+  worked" throws away the only part the human needed.

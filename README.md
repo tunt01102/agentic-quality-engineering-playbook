@@ -21,6 +21,7 @@ is written so that any team, on any project, with any capable assistant, can pic
 | [WORKFLOW.md](WORKFLOW.md) | The daily loop: plan from live evidence, run each task in a fresh session, review the day, feed the lessons into the next plan | people and AIs |
 | [PRINCIPLES.md](PRINCIPLES.md) | The working rules that survived three months of corrections, each with the reason it exists | AIs first |
 | [LESSONS.md](LESSONS.md) | The recurring failure classes, in what happened / cause / fix / prevention form | both |
+| [VERIFICATION.md](VERIFICATION.md) | Why a green result can mean nothing, and the checks that make it mean something: fallbacks that rubber-stamp, predicates satisfied by an empty world, self-written baselines, proxies at their ceiling | both |
 | [TIPS.md](TIPS.md) | Reusable tips for working effectively with an AI assistant, each with a why and a how | anyone, any project |
 | [templates/](templates/) | The lesson format and the JSON schemas of the day plan and the end-of-day review, for reuse | AIs and tool builders |
 | [llms.txt](llms.txt) | A short machine-oriented index of this repository | AIs |
