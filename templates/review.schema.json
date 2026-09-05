@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "End-of-day self-review",
+  "description": "Written by the end-of-day review session; validated by a predicate script; feeds the score series and the Self-review / Daily Report tabs. Field names are generic here.",
+  "type": "object",
+  "required": ["run_id", "date", "status", "plan_items", "done", "score", "score_rationale", "self_eval", "tasks", "lessons", "improvements_applied", "tips_added", "report"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "week": { "type": "string" },
+    "status": { "enum": ["in_progress", "complete", "paused_limit"] },
+    "generated_at": { "type": "string" },
+    "plan_items": { "type": "integer", "minimum": 0 },
+    "done": { "type": "integer" }, "partial": { "type": "integer" }, "blocked": { "type": "integer" },
+    "skipped": { "type": "integer" }, "failed": { "type": "integer" }, "not_run": { "type": "integer" },
+    "score": { "type": "number", "minimum": 0, "maximum": 10 },
+    "score_rationale": { "type": "string", "minLength": 20 },
+    "self_eval": {
+      "type": "object",
+      "required": ["planning_accuracy", "execution", "verification", "communication"],
+      "properties": {
+        "planning_accuracy": { "type": "number", "minimum": 0, "maximum": 10, "description": "Were these the right tasks, sized right, estimated right?" },
+        "execution": { "type": "number", "minimum": 0, "maximum": 10 },
+        "verification": { "type": "number", "minimum": 0, "maximum": 10 },
+        "communication": { "type": "number", "minimum": 0, "maximum": 10 }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "slot", "title", "outcome", "pct", "evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^S[0-9]+$" }, "slot": { "type": "integer", "minimum": 1 },
+          "ticket_id": { "type": ["string", "null"] }, "title": { "type": "string" }, "model": { "type": "string" },
+          "outcome": { "enum": ["done", "partial", "blocked", "skipped", "failed", "not_run"] },
+          "pct": { "type": "number", "minimum": 0, "maximum": 100 }, "evidence": { "type": "string" },
+          "prs": { "type": "array", "items": { "type": "string" } }, "note": { "type": "string" },
+          "est_minutes": { "type": ["number", "null"], "description": "Copied from the plan item." },
+          "actual_minutes": { "type": ["number", "null"], "description": "Copied from the runner's estimation file; measured from the session's duration." },
+          "est_tokens_k": { "type": ["number", "null"], "description": "Copied from the plan item (thousands of work tokens)." },
+          "actual_tokens_k": { "type": ["number", "null"], "description": "Copied from the runner's estimation file (fresh input + cache writes + output, thousands)." },
+          "verdict_minutes": { "enum": ["under", "on", "over", "n/a"], "description": "actual / estimate below, inside or above the on-band window (0.75 to 1.25 by default)." },
+          "verdict_tokens": { "enum": ["under", "on", "over", "n/a"] },
+          "estimate_note": { "type": "string", "description": "Why the actual differed from the estimate, or 'estimate held'. Required for every measured task." }
+        }
+      }
+    },
+    "estimation": {
+      "type": "object",
+      "description": "Estimate-vs-actual aggregate for the day, copied from the runner-computed file (never recomputed by the model) plus the reviewer's calibration note for the next plan.",
+      "required": ["n_measured", "calibration_note"],
+      "properties": {
+        "n_measured": { "type": "integer", "minimum": 0 },
+        "minutes_ratio_median": { "type": ["number", "null"] }, "tokens_ratio_median": { "type": ["number", "null"] },
+        "on_band_pct": { "type": ["number", "null"] },
+        "room_for_second_task": { "type": "array", "items": { "type": "string" }, "description": "Task ids whose measured session stayed small enough that a second small task could have shared it." },
+        "calibration_note": { "type": "string", "minLength": 20, "description": "What tomorrow's planner should do with its raw estimates." }
+      }
+    },
+    "lessons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "what_happened", "cause", "fix", "prevention", "tag", "severity"],
+        "properties": {
+          "title": { "type": "string" }, "what_happened": { "type": "string" }, "cause": { "type": "string" },
+          "fix": { "type": "string" }, "prevention": { "type": "string" },
+          "tag": { "enum": ["planning", "process", "tooling", "verification", "communication", "model"] },
+          "severity": { "enum": ["low", "medium", "high"] }, "source": { "type": "string" }
+        }
+      }
+    },
+    "improvements_applied": {
+      "type": "array",
+      "items": { "type": "object", "required": ["from", "applied", "effect"], "properties": { "from": { "type": "string" }, "applied": { "type": "string" }, "effect": { "enum": ["helped", "no effect", "too early to tell"] } } }
+    },
+    "tips_added": { "type": "array", "items": { "type": "object", "required": ["tip", "why", "how"], "properties": { "tip": { "type": "string" }, "why": { "type": "string" }, "how": { "type": "string" } } }, "description": "General tips only: no company, product, tool vendor, person, ticket or date tied to the project." },
+    "report": {
+      "type": "object",
+      "required": ["today", "prs", "tomorrow", "issues", "help_needed"],
+      "properties": {
+        "today": { "type": "array", "items": { "type": "string" } },
+        "prs": { "type": "array", "items": { "type": "object", "required": ["number", "url", "state"], "properties": { "repo": { "type": "string" }, "number": { "type": "integer" }, "url": { "type": "string" }, "title": { "type": "string" }, "state": { "enum": ["draft", "open", "merged", "closed"] }, "checks": { "type": "string" }, "review": { "type": "string" }, "note": { "type": "string" } } } },
+        "tomorrow": { "type": "array", "items": { "type": "string" } },
+        "issues": { "type": "array", "items": { "type": "string" } },
+        "help_needed": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

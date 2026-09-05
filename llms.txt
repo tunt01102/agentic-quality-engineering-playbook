@@ -1,0 +1,15 @@
+# Working with an AI coding assistant as a daily engineering partner
+
+> Plain-text knowledge base: a general method for one engineer and one AI assistant running a daily plan / execute / review loop on a real software project, with the rules, lessons and tips that came out of three months of it. No company, product, customer, ticket or person is named; everything is written to be reused by any team.
+
+## Core
+- [WORKFLOW.md](WORKFLOW.md): the daily loop (plan, fresh executor sessions, end-of-day review), predicates, controls in order of trust, estimates measured
+- [PRINCIPLES.md](PRINCIPLES.md): working rules with reasons; read before acting in this style
+- [LESSONS.md](LESSONS.md): failure classes in what happened / cause / fix / prevention form
+- [TIPS.md](TIPS.md): general tips for working with an AI assistant, each with why and how
+
+## Reuse
+- [templates/lesson.md](templates/lesson.md): the lesson format
+- [templates/review.schema.json](templates/review.schema.json): JSON schema of the end-of-day review, including estimate vs actual
+- [templates/day-plan.schema.json](templates/day-plan.schema.json): JSON schema of the day plan, including the two estimates
+- [tools/publish-check.sh](tools/publish-check.sh): the push-time gate that keeps project-specific terms out of this repository
