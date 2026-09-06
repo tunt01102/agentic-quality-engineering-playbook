@@ -53,4 +53,5 @@ written down with its reasons.
 
 ## Licence
 
-Text in this repository may be reused with attribution.
+This repository is released under the [MIT License](LICENSE). You may use, copy, modify and redistribute
+its contents, provided the copyright notice and licence text are kept with any copy.
