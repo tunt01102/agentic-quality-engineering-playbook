@@ -1,4 +1,6 @@
 .DS_Store
 *.tmp-*
+__pycache__/
+*.pyc
 # local only: the terms the publish gate searches for would themselves identify people or customers
 tools/publish-denylist.txt

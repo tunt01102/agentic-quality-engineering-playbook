@@ -11,8 +11,9 @@ A plain-text knowledge base, written so that both people and AI assistants can r
 It describes a working method: one engineer and one AI assistant running a daily plan / execute / review
 loop on a real software product, and the rules, lessons and tips that came out of three months of doing it.
 
-Everything here is general. There is no company, product, customer or ticket in these files; the method
-is written so that any team, on any project, with any capable assistant, can pick it up.
+Examples use general descriptions without client, internal project, customer or ticket identifiers.
+The public author's copyright attribution remains in `LICENSE`. The method is written so that any team,
+on any project, with any capable assistant, can pick it up.
 
 ## Read in this order
 
@@ -38,10 +39,25 @@ is written so that any team, on any project, with any capable assistant, can pic
 ## Before publishing or pushing
 
 Part of this repository is written by an unattended job, so a human check happens at push time. Run
-`bash tools/publish-check.sh` first: it lists every line that looks like a credential, an address, a path,
-a tracker or PR identifier, a repository or account name, a test file name, non-English text, or any term in
-the local, untracked `tools/publish-denylist.txt` (your company, products, tools, people, places). A clean
-run is the condition for a push; a finding is either rewritten or justified in the commit message.
+`bash tools/publish-check.sh` first (Python 3 required). It scans tracked files and non-ignored untracked
+files, including filenames, directory components, extensionless files and the checker itself. It flags
+credential patterns, addresses, local paths, tracker identifiers, account mentions, project test names
+and text needing shared-language review. Reports contain locations and categories, never matched values;
+sensitive filenames are redacted. Binary files and symlinks require review, and scan errors fail closed.
+
+Keep company, client, internal repository, folder and person names in the ignored local
+`tools/publish-denylist.txt`, one literal term per line (case-insensitive; blank lines and comments starting
+with `#` are ignored). Never commit this file or copy its terms into checker source, tests or commit
+messages. The checker refuses a tracked denylist. Without a populated local list, generic patterns alone
+cannot identify private names. Preserve legitimate public licence attribution when curating the list.
+
+After staging, run `bash tools/publish-check.sh --staged` to check the complete index snapshot, including
+unchanged files. Both scans must pass before pushing. Ignored local files and Git history are outside
+these scans: inspect commit messages and historical versions separately before publication. Removing a
+name in a new commit does not remove it from older commits. Review prose and filenames manually as well;
+a clean pattern scan is supporting evidence, not proof that no private context remains.
+
+Run the checker regression suite with `python3 -m unittest discover -s tools/tests`.
 
 ## Why publish a working method rather than a tool
 

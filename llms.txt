@@ -1,6 +1,6 @@
 # Working with an AI coding assistant as a daily engineering partner
 
-> Plain-text knowledge base: a general method for one engineer and one AI assistant running a daily plan / execute / review loop on a real software project, with the rules, lessons and tips that came out of three months of it. No company, product, customer, ticket or person is named; everything is written to be reused by any team.
+> Plain-text knowledge base: a general method for one engineer and one AI assistant running a daily plan / execute / review loop on a real software project, with the rules, lessons and tips that came out of three months of it. Examples omit client and internal project identifiers; the public author's licence attribution is retained. Everything is written to be reused by any team.
 
 ## Core
 - [WORKFLOW.md](WORKFLOW.md): the daily loop (plan, fresh executor sessions, end-of-day review), predicates, controls in order of trust, estimates measured
