@@ -1,8 +1,15 @@
 {
-  "queries": ["claude code skills", "claude-code agents", "topic:claude-code-skills", "topic:agent-skills", "SKILL.md claude"],
+  "queries": [
+    "claude code skills",
+    "claude-code agents",
+    "topic:claude-code-skills",
+    "topic:agent-skills",
+    "SKILL.md claude"
+  ],
   "minStars": 200,
   "maxAgeDays": 365,
-  "reposPerQuery": 10,
-  "maxSkillsPerRepo": 40,
-  "maxFilesPerSkill": 20
+  "reposPerQuery": 6,
+  "maxSkillsPerRepo": 20,
+  "maxFilesPerSkill": 20,
+  "maxBlobsPerRepo": 300
 }

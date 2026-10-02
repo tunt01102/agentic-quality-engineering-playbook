@@ -101,7 +101,7 @@ async function main(argv) {
     }
     case 'scout': {
       const { scout } = await scoutMod();
-      const r = await scout({ state, dryRun: args['dry-run'] });
+      const r = await scout({ state, dryRun: args['dry-run'], log: (m) => console.error(m) });
       if (!r.candidates.length && r.errors.length) process.exitCode = 2; // every search failed: the run did not happen
       return out(args.json ? r : `scout: ${r.candidates.length} candidates, ${r.candidates.filter((c) => c.eligible).length} eligible, ${r.errors.length} errors`);
     }

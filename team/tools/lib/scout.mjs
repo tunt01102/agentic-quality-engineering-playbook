@@ -84,6 +84,7 @@ export function loadConfig(config) {
     maxAgeDays: int(c.maxAgeDays, 365, 36_500),
     reposPerQuery: Math.max(1, int(c.reposPerQuery, 10, 100)),
     maxSkillsPerRepo: Math.max(1, int(c.maxSkillsPerRepo, 40, 1000)),
+    maxBlobsPerRepo: Math.max(1, int(c.maxBlobsPerRepo, 300, 5000)),
     maxFilesPerSkill: Math.max(1, int(c.maxFilesPerSkill, 20, 1000)),
   };
 }
@@ -199,6 +200,20 @@ export function candidateId(owner, repo, dir, used = new Set()) {
   return id;
 }
 
+/** Run fn over items with at most `limit` in flight; results keep input order. */
+export async function pool(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i], i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
 // ---- scout ----------------------------------------------------------------------------------------
 
 async function searchRepos(gh, cfg, errors) {
@@ -256,6 +271,18 @@ async function scoutRepo(gh, row, ctx) {
     return blobCache.get(entry.sha);
   };
 
+  // Fetch every blob the scan will read, in parallel, before scanning (the gh calls dominate run time).
+  const wanted = new Map();
+  for (const e of entries) {
+    const inSkill = skillDirs.some((d) => (d ? e.path.startsWith(`${d}/`) : true));
+    if ((inSkill || e === rootLicence) && (Number(e.size) || 0) <= MAX_BLOB_BYTES) wanted.set(e.sha, e);
+  }
+  if (wanted.size > ctx.cfg.maxBlobsPerRepo) {
+    ctx.errors.push({ repo: full, error: `${wanted.size} files to fetch exceed maxBlobsPerRepo ${ctx.cfg.maxBlobsPerRepo}; repository skipped` });
+    return;
+  }
+  await pool([...wanted.values()], 8, (e) => getText(e).catch(() => null));
+  ctx.log(`scout: ${full}: ${skillDirs.length} skill(s), ${wanted.size} file(s)`);
   for (const dir of skillDirs) {
     try {
       // Files of this skill only: a nested skill directory below it is its own candidate.
@@ -331,23 +358,26 @@ async function scoutRepo(gh, row, ctx) {
   }
 }
 
-export async function scout({ gh = defaultGh, state = stateDir(), config, clock = Date.now, dryRun = false } = {}) {
+export async function scout({ gh = defaultGh, state = stateDir(), config, clock = Date.now, dryRun = false, log = () => {} } = {}) {
   const cfg = loadConfig(config);
   const ts = nowIso(clock);
   const errors = [];
-  const ctx = { cfg, state, dryRun, errors, candidates: [], used: new Set(), agents: loadAgents(state) };
+  const ctx = { cfg, state, dryRun, errors, candidates: [], used: new Set(), agents: loadAgents(state), log };
   const cutoff = clock() - cfg.maxAgeDays * 86_400_000;
-  const rows = await searchRepos(gh, cfg, errors);
-  for (const row of rows) {
-    if ((Number(row.stargazersCount) || 0) < cfg.minStars) continue;
+  const rows = (await searchRepos(gh, cfg, errors)).filter((row) => {
     const pushed = Date.parse(row.pushedAt);
-    if (!Number.isFinite(pushed) || pushed < cutoff) continue;
+    return (Number(row.stargazersCount) || 0) >= cfg.minStars && Number.isFinite(pushed) && pushed >= cutoff;
+  });
+  log(`scout: ${rows.length} repositories to scan`);
+  await pool(rows, 3, async (row) => {
     try {
       await scoutRepo(gh, row, ctx);
     } catch (err) {
       errors.push({ repo: clip(String(row.fullName), 100), error: clip(err.message, 300) });
     }
-  }
+  });
+  // Parallel scanning finishes in any order; keep the output stable.
+  ctx.candidates.sort((a, b) => b.stars - a.stars || a.id.localeCompare(b.id));
   const result = { ts, queries: cfg.queries, minStars: cfg.minStars, candidates: ctx.candidates, errors };
   if (!dryRun) writeJson(path.join(state, 'candidates', `scout-${stamp(ts)}.json`), result);
   return result;

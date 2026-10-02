@@ -37,5 +37,10 @@ wording that could soften a deployment check, a build prerequisite) were fixed i
 - `node --test 'team/tools/tests/*.test.mjs'`: 142 passed, 0 failed (run three times without a flake).
 - Mutation run: 34 of 34 mutants killed.
 - `bash tools/publish-check.sh`: 0 findings.
+- Live checks after the rollout: `scout --dry-run` against public repositories took 42 s after fetching was
+  parallelised (it had not finished in 12 minutes sequentially): 174 candidates, 38 eligible; the trust scan
+  flagged home-directory writes, harness edits, unpinned remote code and injection phrases in the rest. The
+  dashboard served the real state (3 projects, 4 scored tasks, schedule freshness). The printed macOS job
+  definition passes `plutil -lint`.
 - Dashboard checked in a real browser at 1280 and 375 pixels, light and dark: no runtime errors, no
   horizontal overflow.
