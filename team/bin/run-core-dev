@@ -1,0 +1,14 @@
+#!/bin/sh
+# Start the core dev team dashboard and open it in the browser.
+# Usage: run-core-dev [--port N] [--no-open]
+# Works through a symlink on PATH: resolve this file's real location first.
+self="$0"
+while [ -L "$self" ]; do
+  link="$(readlink "$self")"
+  case "$link" in
+    /*) self="$link" ;;
+    *) self="$(dirname "$self")/$link" ;;
+  esac
+done
+here="$(cd "$(dirname "$self")" && pwd -P)"
+exec node "$here/../tools/team.mjs" dashboard "$@"

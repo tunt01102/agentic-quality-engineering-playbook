@@ -325,7 +325,9 @@ the change to what agents read waits for a person.
 
 ## 8. Dashboard
 
-`node team/tools/team.mjs serve` binds `127.0.0.1` only (default port 4417), no dependencies.
+`node team/tools/team.mjs serve` binds `127.0.0.1` only (default port 4417), no dependencies. The
+`run-core-dev` command (`team/bin/run-core-dev`, put on the PATH by `team.mjs install-command` as a
+symlink) starts it and opens the default browser in one step, or reopens a dashboard that is already running.
 
 Pages: **Overview** (core version, projects using the core with profile, installed version, drift, last
 task, tasks in 7 and 30 days; quality index parts over time), **Tasks** (score, breakdown, deltas with n,

@@ -64,8 +64,20 @@ node team/tools/team.mjs collect      # score new task records from every regist
 node team/tools/team.mjs evaluate     # agent rubric scores, calibration, roadmap
 node team/tools/team.mjs scout        # well-starred public skills, trust-scanned and ranked
 node team/tools/team.mjs adopt <id>   # the one human step: vendor a passing candidate
-node team/tools/team.mjs serve        # dashboard on 127.0.0.1:4417
+node team/tools/team.mjs serve        # dashboard on 127.0.0.1:4417 (server only)
 ```
+
+### One command: `run-core-dev`
+
+```bash
+node team/tools/team.mjs install-command   # once: symlink run-core-dev into a writable directory on PATH
+run-core-dev                               # start the dashboard and open it in the browser
+run-core-dev --port 4500 --no-open         # another port; do not open a browser
+```
+
+If a dashboard is already running on the port, `run-core-dev` just opens it again. `install-command` prefers
+the home `bin` directories, never overwrites a file it did not create, and `CORE_NO_OPEN=1` disables the
+browser for scripted use. Ctrl+C stops the server.
 
 State lives in `$AGENTIC_TEAM_HOME` (default `$HOME/.agentic-team`), outside every repository. The
 dashboard runs due jobs every minute while it is open; `schedule print-macos` prints a background job

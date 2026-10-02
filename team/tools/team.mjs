@@ -27,6 +27,8 @@ const HELP = `core dev team ${VERSION}
   adopt <candidate-id>                      vendor one passing candidate into the state directory
   tick                                      run due scheduled jobs
   serve [--port 4417]                       local dashboard on 127.0.0.1
+  dashboard [--port 4417] [--no-open]       start (or reuse) the dashboard and open it in the browser
+  install-command [--dir <dir>]             put run-core-dev on your PATH (symlink, never overwrites)
   schedule print-macos                      print a macOS background job that runs tick every 15 minutes
   measure <project> [--samples 3] [--prompt "..."]  context tokens of a fresh session
 `;
@@ -34,7 +36,7 @@ const HELP = `core dev team ${VERSION}
 const list = (v) => (Array.isArray(v) ? v : v === undefined ? [] : [v]);
 
 async function main(argv) {
-  const args = parseArgs(argv, { multi: ['evidence', 'agent'], bool: ['dry-run', 'force', 'strict', 'all', 'json', 'help', 'version'] });
+  const args = parseArgs(argv, { multi: ['evidence', 'agent'], bool: ['dry-run', 'force', 'strict', 'all', 'json', 'help', 'version', 'no-open'] });
   const [cmd, sub] = args._;
   const out = (v) => console.log(args.json || typeof v !== 'string' ? JSON.stringify(v, null, 2) : v);
   if (args.version) return out(VERSION);
@@ -117,6 +119,19 @@ async function main(argv) {
     case 'serve': {
       const { serve } = await import('./lib/server.mjs');
       return serve({ port: Number(args.port) || 4417, state });
+    }
+    case 'dashboard': {
+      const { serve } = await import('./lib/server.mjs');
+      const { startDashboard } = await import('./lib/launch.mjs');
+      const port = args.port === undefined ? 4417 : Number(args.port);
+      if (!Number.isInteger(port) || port < 1 || port > 65535) throw new TeamError('--port must be 1-65535', 2);
+      const r = await startDashboard({ port, state, open: !args['no-open'] && !process.env.CORE_NO_OPEN, serve });
+      return r.reused ? undefined : new Promise(() => {}); // keep serving until Ctrl+C
+    }
+    case 'install-command': {
+      const { installCommand } = await import('./lib/launch.mjs');
+      const r = installCommand({ dir: typeof args.dir === 'string' ? args.dir : undefined });
+      return out(args.json ? r : `${r.created ? 'installed' : 'already installed'}: ${r.link} -> ${r.bin}${r.onPath ? '' : ' (that directory is not on your PATH)'}`);
     }
     case 'schedule': {
       if (sub !== 'print-macos') throw new TeamError('schedule needs print-macos');
