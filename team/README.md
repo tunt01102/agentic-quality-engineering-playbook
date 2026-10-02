@@ -60,7 +60,8 @@ admits an omission. `gate` exits 1 unless the current tree has a passing receipt
 ## Scores, roadmap, scouting, dashboard
 
 ```bash
-node team/tools/team.mjs collect      # score new task records from every registered project
+node team/tools/team.mjs collect      # score new task records, read their CI, count commits without a task
+node team/tools/team.mjs register ../my-app --gh-user <login>   # account used to read that project's CI
 node team/tools/team.mjs evaluate     # agent rubric scores, calibration, roadmap
 node team/tools/team.mjs scout        # well-starred public skills, trust-scanned and ranked
 node team/tools/team.mjs adopt <id>   # the one human step: vendor a passing candidate

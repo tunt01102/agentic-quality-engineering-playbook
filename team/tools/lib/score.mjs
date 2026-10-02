@@ -61,7 +61,10 @@ export function scoreTask(rec) {
   let rework = 0;
   let estimate = 0;
   if (rec.outcome === 'done' || rec.outcome === 'partial') {
-    rework = Math.max(0, 8 - 3 * (Number(rec.rework_rounds) || 0));
+    // A red CI run on any commit of the task counts as a rework round, like a failed local verify.
+    const ciFailed = rec.ci && (rec.ci.status === 'pass' || rec.ci.status === 'fail') ? Number(rec.ci.failed) || 0 : 0;
+    if (!rec.ci || rec.ci.status === 'unknown') notes.push('ci: not checked');
+    rework = Math.max(0, 8 - 3 * ((Number(rec.rework_rounds) || 0) + ciFailed));
     const est = Number(rec.estimate_min);
     const act = Number(rec.actual_min);
     if (est > 0 && act >= 0) {

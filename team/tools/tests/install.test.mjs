@@ -284,3 +284,27 @@ test('activeRules install as path-scoped rules', () => {
   assert.ok(fs.existsSync(path.join(project, '.claude/rules/ecc/typescript/style.md')));
   assert.ok(fs.existsSync(path.join(project, '.claude/rules/ecc/LICENSE-ECC')));
 });
+
+test('adopted skills from project.json install into the library and the index, verified first', async () => {
+  const { project, state, run } = setup();
+  const { verifyAdopted } = await import('../lib/scout.mjs');
+  const { sha256 } = await import('../lib/util.mjs');
+  run();
+  commitAll(project);
+  const id = 'owner-repo-good-skill';
+  const files = { 'SKILL.md': '---\nname: good\ndescription: A good skill. Use when testing.\n---\nBody\n', LICENSE: 'MIT\n' };
+  for (const [rel, text] of Object.entries(files)) write(state, `adopted/${id}/${rel}`, text);
+  const lockFiles = Object.entries(files).map(([rel, text]) => ({ path: rel, sha256: sha256(text) }));
+  write(state, 'adopted.lock.json', JSON.stringify({ skills: { [id]: { repo: 'o/r', commit: 'c'.repeat(40), files: lockFiles } } }));
+  const cfgFile = path.join(project, '.claude/team/project.json');
+  const cfg = readJson(cfgFile);
+  cfg.extraEcc = { adopted: [id] };
+  fs.writeFileSync(cfgFile, JSON.stringify(cfg));
+  commitAll(project);
+  run({ verifyAdopted });
+  assert.ok(fs.existsSync(path.join(project, `.claude/team/library/ext-${id}/SKILL.md`)));
+  assert.ok(!fs.existsSync(path.join(project, `.claude/skills/ext-${id}`)), 'not an always-loaded skill');
+  assert.match(fs.readFileSync(path.join(project, '.claude/team/library/INDEX.md'), 'utf8'), new RegExp(`ext-${id}.*adopted: A good skill`));
+  fs.appendFileSync(path.join(state, `adopted/${id}/SKILL.md`), 'tampered\n');
+  assert.throws(() => run({ verifyAdopted }), /failed verification/);
+});

@@ -21,6 +21,10 @@ more than a false done.
 
 ## Close the record
 
+Commit the work first (the project's commit rules apply), then close the record, so the task's commits and
+their CI runs can be attributed to it. A record closed with uncommitted changes says so.
+
+
 ```bash
 node "$CORE/team/tools/team.mjs" task done --project . --task <id> --outcome done|partial|blocked|refuted --evidence "<criterion: proof>" [--evidence "..."]
 ```

@@ -455,14 +455,26 @@ evaluations, and a local dashboard. Nineteen transferable ideas were extracted a
 - Freshness kept separate from results on the Schedules page (fresh, stale, missed, disabled).
 - The rule to mechanism map above.
 
-Roadmap for v0.2 (each needs data or design work first):
+Delivered in v0.2:
 
-- Review findings per pull request from other reviewers, with a stop threshold, and each finding
-  classified and turned into a local check; this fills the `escaped findings: unmeasured` gap.
+- CI results feed the task score. `collect` lists the commits a task made (`startHead..head`), asks GitHub
+  Actions for the runs those commits caused (`push`, `pull_request`; scheduled runs on the same commit do not
+  count), and counts each red run as a rework round. A task closed before its commit, or a record from before
+  commit tracking, has no attributable commits: CI is `none` or `unknown` and costs nothing. `register
+  <project> --gh-user <login>` picks the account used to read a project's CI. `core-done` now says to commit
+  before closing the record, and the record carries `uncommittedFiles`. The first live run proved the rule:
+  without it, a task closed before its commit was charged with five scheduled-workflow failures on the
+  previous commit.
+- Commit coverage: `collect` writes `coverage.json` with the last 30 days of non-merge, non-bot commits that
+  no task covers; the dashboard shows "commits without a task" per project.
+- Review findings per task (median of the last ten, five minimum) in the evaluation and roadmap.
+- Adopted skills install into the on-demand library (`library/ext-<id>/`, listed in the index), chosen per
+  project with `extraEcc.adopted` in its own `project.json`; the public profiles never name machine state.
+
+Still open:
+
+- Findings per pull request from other reviewers with a stop threshold, each finding turned into a check.
 - A miss ledger: a rule existed but was not applied, versus no rule existed.
-- Commit-to-record matching in `collect`, so a task without a record shows as `unrecorded`.
 - An append-only audit log of hook decisions that stores command classes only.
 - A weekly retro judged by a separate model, with one prevention item checked the next week.
 - Earned versus granted trust, never averaged.
-- CI results feeding the task record: today rework counts only failed local verify rounds, so a red CI
-  run after a passing local verify does not lower the score.

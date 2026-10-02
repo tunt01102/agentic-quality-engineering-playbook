@@ -237,3 +237,13 @@ test('gate commands are redacted in receipts', () => {
   const { file } = verify({ project, clock });
   assert.ok(!fs.readFileSync(file, 'utf8').includes(fakeKey));
 });
+
+test('a record closed with uncommitted tracked changes says so; startHead is recorded', () => {
+  const { project, clock } = setup();
+  const t = taskStart({ project, title: 'Uncommitted', cls: 'investigate', estimate: 5, premise: 'confirmed', clock });
+  fs.appendFileSync(path.join(project, 'package.json'), '\n');
+  verify({ project, task: t.id, clock });
+  const rec = taskDone({ project, task: t.id, outcome: 'done', evidence: ['x'], clock });
+  assert.equal(rec.uncommittedFiles, 1);
+  assert.match(rec.startHead, /^[0-9a-f]{40}$/);
+});

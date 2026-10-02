@@ -21,7 +21,8 @@ const HELP = `core dev team ${VERSION}
   review --project . --task <id> --lens <l> (--findings 0 | --severity s --where f:l --disposition d [--note n])
   review resolve --project . --task <id> --where f:l --disposition d [--note n]
   gate [--project .]                        exit 1 unless the current tree has a passing receipt
-  collect                                   pull task records from registered projects and score them
+  collect                                   pull task records, check CI for their commits, score, find unrecorded commits
+  register <project> --gh-user <login>      which gh account collect uses to read that project's CI
   evaluate                                  score agents, write the roadmap
   scout [--dry-run]                         search public skills, trust-scan, rank
   adopt <candidate-id>                      vendor one passing candidate into the state directory
@@ -94,6 +95,16 @@ async function main(argv) {
       out(args.json ? r : r.pass ? `gate: PASS (receipt ${r.receipt})` : `gate: FAIL (${r.reason})`);
       if (!r.pass) process.exitCode = 1;
       return;
+    }
+    case 'register': {
+      if (!sub || typeof args['gh-user'] !== 'string' || !/^[A-Za-z0-9-]{1,39}$/.test(args['gh-user'])) throw new TeamError('register needs a project path and --gh-user <login>', 2);
+      const file = path.join(state, 'registry.json');
+      const reg = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const entry = Object.entries(reg.projects || {}).find(([, p]) => p.path === path.resolve(sub));
+      if (!entry) throw new TeamError(`${path.resolve(sub)} is not a registered project (install the core first)`);
+      entry[1].ghUser = args['gh-user'];
+      writeJson(file, reg);
+      return out(`registered ${entry[0]}: CI read with the ${args['gh-user']} account`);
     }
     case 'collect':
       return out(collect({ state }));

@@ -34,7 +34,7 @@ wording that could soften a deployment check, a build prerequisite) were fixed i
 
 ## Evidence
 
-- `node --test 'team/tools/tests/*.test.mjs'`: 142 passed, 0 failed (run three times without a flake).
+- `node --test 'team/tools/tests/*.test.mjs'`: 161 passed, 0 failed (run three times without a flake).
 - Mutation run: 34 of 34 mutants killed.
 - `bash tools/publish-check.sh`: 0 findings.
 - Live checks after the rollout: `scout --dry-run` against public repositories took 42 s after fetching was

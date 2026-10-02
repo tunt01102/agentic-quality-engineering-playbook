@@ -197,15 +197,17 @@ async function loadOverview() {
     const drift = check ? el('span', { className: `pill ${check.status}`, text: check.status + (check.problems ? ` (${check.problems})` : '') }) : DASH;
     const last = p.lastTask ? `${p.lastTask.task || p.lastTask.id} · ${when(p.lastTask.ts)}` : DASH;
     const counts = data.tasksFile ? `${fmt(p.tasks7d)} / ${fmt(p.tasks30d)}` : NO_DATA;
+    const cov = p.coverage && p.coverage.status === 'ok' ? `${p.coverage.unrecorded} of ${p.coverage.commits}` : DASH;
     return el('tr', {},
       cell(p.name),
       cell((p.profiles || []).join(', ') || DASH),
       cell(p.coreVersion),
       cell(drift),
       cell(last),
-      cell(counts, 'num'));
+      cell(counts, 'num'),
+      cell(cov, 'num'));
   });
-  table($('projects-table'), ['Project', 'Profiles', 'Version', 'Drift', 'Last task', 'Tasks 7d / 30d'], rows,
+  table($('projects-table'), ['Project', 'Profiles', 'Version', 'Drift', 'Last task', 'Tasks 7d / 30d', 'Commits without a task (30d)'], rows,
     data.registry ? 'no projects registered' : NO_DATA);
   const idx = data.index || [];
   const toPts = (k) => idx.map((r) => ({ x: Date.parse(r.ts), y: r[k] })).filter((p) => Number.isFinite(p.x));

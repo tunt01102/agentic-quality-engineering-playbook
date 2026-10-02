@@ -156,6 +156,10 @@ export function applyPatch(text, patch) {
 export function planInstall({ profiles, teamRoot = TEAM_ROOT, ecc, lock, state = stateDir(), verifyAdopted, extra }) {
   const sel = resolveProfiles(profiles, teamRoot);
   // Project-owned additions (project.json extraEcc) on top of the public profiles: the project decides.
+  for (const id of extra?.adopted || []) {
+    if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) throw new TeamError(`project.json extraEcc.adopted: invalid id ${JSON.stringify(id)}`);
+    if (!sel.adopted.includes(id)) sel.adopted.push(id);
+  }
   for (const k of ['skills', 'activeSkills', 'agents', 'rules', 'activeRules']) {
     for (const item of extra?.[k] || []) {
       if (typeof item !== 'string' || !/^[a-z0-9][a-z0-9/.-]{0,80}$/.test(item) || item.includes('..')) throw new TeamError(`project.json extraEcc.${k}: invalid entry ${JSON.stringify(item)}`);
@@ -278,7 +282,6 @@ export function planInstall({ profiles, teamRoot = TEAM_ROOT, ecc, lock, state =
       push({ dest: '.claude/rules/ecc/LICENSE-ECC', content: license, source: 'ecc', upstream: 'LICENSE', upstreamSha256: sha256(license), transforms: [] });
     }
     if (library.length) {
-      push({ dest: `${LIBRARY}/INDEX.md`, content: libraryIndex(library, lock), source: 'core', upstream: 'generated:library-index', transforms: [] });
       if (!library.every((e) => e.active)) push({ dest: `${LIBRARY}/LICENSE-ECC`, content: license, source: 'ecc', upstream: 'LICENSE', upstreamSha256: sha256(license), transforms: [] });
     }
   }
@@ -288,10 +291,18 @@ export function planInstall({ profiles, teamRoot = TEAM_ROOT, ecc, lock, state =
     const v = verifyAdopted(id, state);
     if (!v.ok) throw new TeamError(`adopted skill ${id} failed verification: ${v.problems.join('; ')}`);
     const dir = path.join(state, 'adopted', id);
+    // Adopted skills join the on-demand library like ECC skills: listed in the index, never loaded by default.
+    const base = `${LIBRARY}/ext-${id}`;
+    const skillMd = path.join(dir, 'SKILL.md');
+    const desc = fs.existsSync(skillMd) ? parseFrontmatter(fs.readFileSync(skillMd, 'utf8')).data.description || '' : '';
+    library.push({ name: `ext-${id}`, description: `adopted: ${desc}`, path: `${base}/SKILL.md`, active: false });
     for (const rel of listFiles(dir)) {
       const raw = readSafe(dir, rel);
-      push({ dest: `.claude/skills/ext-${id}/${rel}`, content: raw, source: 'adopted', upstream: `adopted/${id}/${rel}`, upstreamSha256: sha256(raw), transforms: [] });
+      push({ dest: `${base}/${rel}`, content: raw, source: 'adopted', upstream: `adopted/${id}/${rel}`, upstreamSha256: sha256(raw), transforms: [] });
     }
+  }
+  if (library.length) {
+    push({ dest: `${LIBRARY}/INDEX.md`, content: libraryIndex(library, lock || { tag: 'n/a', commit: 'n/a' }), source: 'core', upstream: 'generated:library-index', transforms: [] });
   }
 
   const unused = sel.patches.filter((p) => !usedPatches.has(p.id)).map((p) => p.id);
@@ -422,7 +433,7 @@ export function install({ project, profiles, dryRun = false, force = false, team
   const eccLock = loadEccLock(teamRoot);
   const sel = resolveProfiles(profiles, teamRoot);
   const extra = projectExtra(project);
-  const needsEcc = sel.ecc.skills.length || sel.ecc.agents.length || sel.ecc.rules.length || Object.values(extra || {}).some((v) => v?.length);
+  const needsEcc = sel.ecc.skills.length || sel.ecc.agents.length || sel.ecc.rules.length || ['skills', 'activeSkills', 'agents', 'rules', 'activeRules'].some((k) => extra?.[k]?.length);
   const ecc = needsEcc ? eccDir({ teamRoot, lock: eccLock }) : null;
   const planned = planInstall({ profiles, teamRoot, ecc, lock: eccLock, state, verifyAdopted, extra });
 

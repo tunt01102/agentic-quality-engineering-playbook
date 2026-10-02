@@ -120,6 +120,7 @@ function overview(state, clock) {
   const registry = readJson(path.join(state, 'registry.json'), null);
   const { tasks, bad, missing } = readTasks(state);
   const scores = readJsonl(path.join(state, 'agent-scores.jsonl'));
+  const coverage = readJson(path.join(state, 'coverage.json'), null);
   const now = clock();
   const projects = Object.entries(registry?.projects || {}).map(([name, p]) => {
     const mine = tasks.filter((t) => t.project === name).sort(byTsDesc);
@@ -136,6 +137,7 @@ function overview(state, clock) {
       lastTask: last ? { id: last.id, ts: last.ts, task: last.task, class: last.class, score: last.score ?? null } : null,
       tasks7d: missing ? null : within(7),
       tasks30d: missing ? null : within(30),
+      coverage: coverage?.projects?.[name] ?? null,
     };
   });
   const index = scores.records

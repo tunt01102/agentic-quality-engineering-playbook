@@ -340,6 +340,9 @@ export function taskDone({ project, task, outcome, evidence = [], agents = [], c
     agents: [...new Set([...(rec.agents || []), ...agents.map((a) => String(a)).filter((a) => /^[a-z0-9-]{2,48}$/.test(a)), ...lenses.filter((l) => !LENSES.includes(l))])],
     outcome,
     evidence: evidence.slice(0, 10).map((e) => clip(e, 300)),
+    startHead: rec.startHead || null,
+    // Tracked files still differing from HEAD when the record closed: the work was not committed first.
+    uncommittedFiles: (git(project, ['diff', '--name-only', 'HEAD', '--', '.', ...RUN_OUTPUT.map((p) => `:(exclude)${p}`)]) || '').split('\n').filter(Boolean).length,
     head: git(project, ['rev-parse', 'HEAD']),
     core_version: VERSION,
   };
