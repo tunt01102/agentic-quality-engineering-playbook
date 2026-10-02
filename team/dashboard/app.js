@@ -404,9 +404,13 @@ function scheduleRow(job, cfg, running, status) {
   const hour = el('input', { type: 'number', name: `${job}.hour`, min: '0', max: '23', step: '1', value: String(cfg.hour) });
   const weekday = el('select', { name: `${job}.weekday` }, DAYS.map((d, i) => el('option', { value: String(i), text: d })));
   weekday.value = String(cfg.weekday);
+  const hourLabel = el('label', {}, 'Hour', hour);
+  const weekdayLabel = el('label', {}, 'Weekday', weekday);
   const sync = () => {
     hour.disabled = every.value === 'hourly';
     weekday.disabled = every.value !== 'weekly';
+    hourLabel.hidden = hour.disabled; // only show the fields the cadence uses
+    weekdayLabel.hidden = weekday.disabled;
   };
   every.addEventListener('change', sync);
   sync();
@@ -426,8 +430,8 @@ function scheduleRow(job, cfg, running, status) {
     el('legend', { text: job }),
     el('label', { className: 'check' }, enabled, 'Enabled'),
     el('label', {}, 'Every', every),
-    el('label', {}, 'Hour', hour),
-    el('label', {}, 'Weekday', weekday),
+    hourLabel,
+    weekdayLabel,
     lastLine(cfg, status),
     run);
 }

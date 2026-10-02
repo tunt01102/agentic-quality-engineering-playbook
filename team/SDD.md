@@ -1,7 +1,7 @@
 # SDD: the core dev team
 
-Status: in progress. The status line changes to "implemented" only with links to the test run, the
-review record ([REVIEW.md](REVIEW.md)) and the context measurement (section 10). Language: English (shared surface).
+Status: implemented (v0.1.0) and installed in three projects. Evidence: the test suite and mutation run in
+[REVIEW.md](REVIEW.md), the context measurement in section 6.1, the rollout record in section 11. Language: English (shared surface).
 
 This document designs a reusable, specialised team of Claude Code agents and skills that any project can
 install. It merges three sources:
@@ -51,8 +51,8 @@ team/                                       .claude/
   SDD.md  README.md                           settings.json        created if absent; project-owned after
   core/   first-party payload   ----------->  rules/core-team.md   always loaded, installed
     rules/ skills/ agents/ templates/          rules/core-project.md  overlay, project-owned
-  profiles/*.json                              rules/ecc/<pack>/*.md  path-scoped ECC rules, installed
-  ecc.lock.json   upstream pin                 skills/core-*/ skills/ecc-*/ (+LICENSE)
+  profiles/*.json                              skills/core-*/       first-party skills, listed every session
+  ecc.lock.json   upstream pin                 team/library/        ECC skills and rules on demand (+INDEX.md)
   tools/team.mjs  CLI, no dependencies         agents/*.md (+LICENSE-ECC)
   tools/lib/  tools/tests/                     team/lock.json       installed files and hashes
   dashboard/                                   team/project.json    gate commands, project-owned
@@ -62,8 +62,9 @@ state directory ($AGENTIC_TEAM_HOME, default $HOME/.agentic-team), outside every
   registry.json  schedules.json  tasks.jsonl  agent-scores.jsonl  runs/  candidates/  adopted/  locks/
 ```
 
-- First-party skills and agents are prefixed `core-`; vendored skills `ecc-`. Claude Code lists a skill
-  by its directory name (verified), so the prefix is real even though upstream `name:` stays verbatim.
+- First-party skills and agents are prefixed `core-`; a vendored skill promoted to a live skill is prefixed
+  `ecc-`. Claude Code lists a skill by its directory name (verified), so the prefix is real even though
+  upstream `name:` stays verbatim. Library skills keep their upstream directory names.
   Vendored agents keep upstream names; the installer refuses a name collision.
 - ECC is fetched with `gh repo clone affaan-m/ECC` at the pinned tag into the ignored `team/.cache/`, and
   the CLI refuses to continue unless `HEAD` equals the pinned commit. Reason: this repository is public
@@ -199,12 +200,34 @@ top of its profiles through `extraEcc` in its own `project.json` (the project de
 
 | Profile | Content |
 |---|---|
-| `core` | core payload; ECC skills search-first, council, tdd-workflow, verification-loop, security-review, coding-standards, architecture-decision-records, codebase-onboarding, santa-method, iterative-retrieval, agentic-engineering, error-handling, api-design; agents planner, architect, code-architect, code-explorer, code-reviewer, typescript-reviewer, security-reviewer, silent-failure-hunter, pr-test-analyzer, type-design-analyzer, comment-analyzer, code-simplifier, build-error-resolver |
-| `web-ts` (extends core) | frontend-patterns, react-patterns, react-testing, react-performance, e2e-testing, accessibility, frontend-a11y, production-audit, contract-first; agents react-reviewer, react-build-resolver, a11y-architect; rules typescript and web and react: coding-style, patterns, security, testing (+ web design-quality, performance) |
+| `core` | core payload; library skills search-first, council, tdd-workflow, verification-loop, security-review, coding-standards, architecture-decision-records, codebase-onboarding, santa-method, iterative-retrieval, agentic-engineering, error-handling, api-design; agents planner, architect, typescript-reviewer, security-reviewer, silent-failure-hunter, pr-test-analyzer, build-error-resolver |
+| `web-ts` (extends core) | library skills frontend-patterns, react-patterns, react-testing, react-performance, e2e-testing, accessibility, frontend-a11y, production-audit, contract-first; agents react-reviewer, react-build-resolver; library rules typescript, web and react: coding-style, patterns, security, testing (+ web design-quality, performance, react hooks) |
 | `vite` | vite-patterns |
 | `nextjs` | nextjs-turbopack (only for projects building with Turbopack) |
 | `seo-content` | seo, i18n-sync, article-writing, brand-voice, content-engine; agent seo-specialist |
-| `ai-llm` | cost-aware-llm-pipeline, ai-regression-testing, regex-vs-llm-structured-text, agent-harness-construction, agent-introspection-debugging; agent mle-reviewer |
+| `ai-llm` | cost-aware-llm-pipeline, ai-regression-testing, regex-vs-llm-structured-text, agent-harness-construction, agent-introspection-debugging |
+
+### 6.1 Always loaded versus on demand
+
+Claude Code lists every installed skill's and agent's description in every session, and loads a `paths:` rule
+whenever a matching file is read (in a TypeScript project: nearly every session). The first rollout installed
+the ECC selection as live skills, agents and scoped rules and measured +24 to +27% context at idle and +35 to
++38% after reading one `.tsx` file, far over the budget. So:
+
+- ECC skills and rules install into an on-demand library, `.claude/team/library/`, with a generated
+  `INDEX.md` (name, file, when to use). `core-dev` reads the index and the matching files when a task needs
+  them. A profile or `project.json` can promote an item with `activeSkills` or `activeRules`.
+- Agents are kept to the roles the pipeline actually dispatches (planner, architect, the reviewers named in
+  `core-review`, the build fixers, the SEO specialist). The rest overlap with core agents or built-in commands.
+- Always-loaded text (`core-team.md`, the project overlay, core descriptions) is kept short.
+
+Measured after the change (median of 3, Claude Code 2.1.287, before = the same repository without `.claude/`):
+
+| Project | Idle prompt | After reading one TS file |
+|---|---|---|
+| first target (Vite) | 29 905 -> 32 197 (+7.7%) | 60 107 -> 64 615 (+7.5%) |
+| second target (Vite) | 27 844 -> 30 222 (+8.5%) | 55 968 -> 60 668 (+8.4%) |
+| third target (Next.js) | 27 212 -> 29 506 (+8.4%) | 54 723 -> 59 251 (+8.3%) |
 
 Every profile file is Markdown (verified: zero non-`.md` files in the profile skills). The installer
 still skips any `.ts .tsx .js .mjs .cjs .py .sh` file and fails if a selected skill's body depends on one,
@@ -372,6 +395,13 @@ Exit codes: 0 success, 1 the check said no, 2 could not run.
    project's gates; measure; register; `.gitignore` lines for `.claude/team/ledger.jsonl`, `receipts/`,
    `open/`; commit; push to `main`.
 
+Result: installed in all three; `check` clean; every project's own gates passed through `verify` on the
+final tree; a headless session in each lists the six core skills and receives the routing hook; context
+within budget (section 6.1). The rollout itself was run as core tasks (task start, verify, four-lens review,
+done) and scored 96 in each project. It also surfaced a pre-existing red CI in one project (the CI Node
+version was below the build tool's engine range, which hid a second defect: tests that read build output ran
+before the build); fixed as a core task, CI green again.
+
 Decision recorded: the maintainer chose direct commits to `main` for the three first projects (all three
 are the maintainer's own), overriding PRINCIPLES rule 18 for this rollout. The commits touch no runtime
 code and need no deployment.
@@ -432,3 +462,5 @@ Roadmap for v0.2 (each needs data or design work first):
 - An append-only audit log of hook decisions that stores command classes only.
 - A weekly retro judged by a separate model, with one prevention item checked the next week.
 - Earned versus granted trust, never averaged.
+- CI results feeding the task record: today rework counts only failed local verify rounds, so a red CI
+  run after a passing local verify does not lower the score.

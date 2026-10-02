@@ -1,6 +1,6 @@
 ---
 name: core-improve
-description: Reads the core's latest agent scores, improvement roadmap and scouted skill candidates, and drafts concrete improvements to first-party core agents and skills. Use when asked to improve the team's agents, review agent quality, or act on the roadmap.
+description: Acts on the core's agent scores, roadmap and scouted skills by drafting improvements to core agents and skills. Use when asked to improve the team's agents.
 ---
 
 # core-improve

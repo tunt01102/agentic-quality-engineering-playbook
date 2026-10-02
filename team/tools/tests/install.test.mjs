@@ -33,12 +33,15 @@ test('install copies a prefixed, licensed, patched subset and writes the lock', 
   const r = run();
   assert.equal(r.dryRun, false);
   const has = (rel) => fs.existsSync(path.join(project, rel));
-  assert.ok(has('.claude/skills/ecc-alpha/SKILL.md'));
-  assert.ok(has('.claude/skills/ecc-alpha/LICENSE'));
-  assert.ok(has('.claude/skills/ecc-alpha/references/notes.md'));
-  assert.ok(!has('.claude/skills/ecc-alpha/scripts/helper.py'), 'executable files are skipped');
+  assert.ok(has('.claude/team/library/alpha/SKILL.md'), 'ECC skills go to the on-demand library by default');
+  assert.ok(!has('.claude/skills/ecc-alpha'), 'and are not listed as active skills');
+  assert.ok(has('.claude/team/library/alpha/LICENSE'));
+  assert.ok(has('.claude/team/library/alpha/references/notes.md'));
+  assert.ok(!has('.claude/team/library/alpha/scripts/helper.py'), 'executable files are skipped');
+  assert.match(fs.readFileSync(path.join(project, '.claude/team/library/INDEX.md'), 'utf8'), /\| `alpha` \| `\.claude\/team\/library\/alpha\/SKILL\.md` \| Alpha skill\. Use when testing\. \|/);
   assert.ok(has('.claude/agents/LICENSE-ECC'));
-  assert.ok(has('.claude/rules/ecc/typescript/style.md'));
+  assert.ok(has('.claude/team/library/rules/typescript/style.md'), 'rules go to the library by default');
+  assert.ok(!has('.claude/rules/ecc'), 'no rule loads by itself');
   assert.ok(has('.claude/rules/core-team.md'));
   assert.ok(has('.claude/skills/core-dev/SKILL.md'));
   const agent = fs.readFileSync(path.join(project, '.claude/agents/reviewer-x.md'), 'utf8');
@@ -109,7 +112,7 @@ test('an unscoped rule is refused', () => {
 
 test('a symlink in the source is refused', () => {
   const { run, team } = setup();
-  fs.symlinkSync('/etc/hosts', path.join(team.ecc, 'skills/alpha/linked.md'));
+  fs.symlinkSync(path.join(team.ecc, 'LICENSE'), path.join(team.ecc, 'skills/alpha/linked.md'));
   assert.throws(() => run(), /symlink/);
 });
 
@@ -126,14 +129,14 @@ test('check is clean after install and goes red on each kind of drift (sabotage)
   run();
   const c = () => check({ project, teamRoot: team.root, state });
   assert.equal(c().status, 'clean');
-  const skill = path.join(project, '.claude/skills/ecc-alpha/SKILL.md');
+  const skill = path.join(project, '.claude/team/library/alpha/SKILL.md');
   const orig = fs.readFileSync(skill);
   fs.appendFileSync(skill, 'x');
   assert.equal(c().status, 'drift', 'one changed byte');
   fs.writeFileSync(skill, orig);
-  write(project, '.claude/skills/ecc-alpha/extra.md', 'smuggled\n');
+  write(project, '.claude/team/library/alpha/extra.md', 'smuggled\n');
   assert.match(c().problems.join('\n'), /unknown file/, 'extra file');
-  fs.rmSync(path.join(project, '.claude/skills/ecc-alpha/extra.md'));
+  fs.rmSync(path.join(project, '.claude/team/library/alpha/extra.md'));
   fs.rmSync(path.join(project, '.claude/agents/LICENSE-ECC'));
   assert.match(c().problems.join('\n'), /missing/, 'missing file');
 });
@@ -173,8 +176,8 @@ test('reinstall removes files a profile dropped, and refuses when they were edit
   p.ecc.rules = [];
   write(team.root, 'profiles/base.json', JSON.stringify(p));
   const r = run();
-  assert.ok(r.removed.includes('.claude/rules/ecc/typescript/style.md'));
-  assert.ok(!fs.existsSync(path.join(project, '.claude/rules/ecc')));
+  assert.ok(r.removed.includes('.claude/team/library/rules/typescript/style.md'));
+  assert.ok(!fs.existsSync(path.join(project, '.claude/team/library/rules')));
 });
 
 test('dry run writes nothing', () => {
@@ -236,4 +239,48 @@ test('check without the pinned checkout names the missing pin', () => {
   run();
   fs.rmSync(team.ecc, { recursive: true, force: true });
   assert.throws(() => check({ project, teamRoot: team.root, state }), /pinned ECC checkout missing/);
+});
+
+test('activeSkills install as listed skills; the rest stay in the library', () => {
+  const { project, team, run } = setup();
+  const p = readJson(path.join(team.root, 'profiles/base.json'));
+  p.ecc.activeSkills = ['alpha'];
+  write(team.root, 'profiles/base.json', JSON.stringify(p));
+  run();
+  assert.ok(fs.existsSync(path.join(project, '.claude/skills/ecc-alpha/SKILL.md')));
+  assert.ok(!fs.existsSync(path.join(project, '.claude/team/library/alpha')));
+  assert.match(fs.readFileSync(path.join(project, '.claude/team/library/INDEX.md'), 'utf8'), /also an active skill/);
+});
+
+test('extraEcc in project.json adds library skills and is validated', () => {
+  const { project, run } = setup();
+  run();
+  commitAll(project);
+  const cfgFile = path.join(project, '.claude/team/project.json');
+  const cfg = readJson(cfgFile);
+  cfg.extraEcc = { skills: ['scripted-not-real'] };
+  fs.writeFileSync(cfgFile, JSON.stringify(cfg));
+  assert.throws(() => run(), /not found at the pin/);
+  cfg.extraEcc = { skills: ['../escape'] };
+  fs.writeFileSync(cfgFile, JSON.stringify(cfg));
+  assert.throws(() => run(), /invalid entry/);
+});
+
+test('reinstall over uncommitted core output is allowed; a human edit under .claude blocks it', () => {
+  const { project, run } = setup();
+  run();
+  run(); // nothing committed yet, every file still matches the lock
+  write(project, '.claude/agents/my-own-agent.md', 'mine\n');
+  assert.throws(() => run(), /uncommitted changes under \.claude/);
+  assert.ok(run({ force: true }));
+});
+
+test('activeRules install as path-scoped rules', () => {
+  const { project, team, run } = setup();
+  const p = readJson(path.join(team.root, 'profiles/base.json'));
+  p.ecc.activeRules = ['typescript/style.md'];
+  write(team.root, 'profiles/base.json', JSON.stringify(p));
+  run();
+  assert.ok(fs.existsSync(path.join(project, '.claude/rules/ecc/typescript/style.md')));
+  assert.ok(fs.existsSync(path.join(project, '.claude/rules/ecc/LICENSE-ECC')));
 });

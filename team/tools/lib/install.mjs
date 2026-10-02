@@ -12,6 +12,7 @@ export const PROJECT_CONFIG = '.claude/team/project.json';
 export const OVERLAY = '.claude/rules/core-project.md';
 export const SETTINGS = '.claude/settings.json';
 export const OWNED = [SETTINGS, OVERLAY, PROJECT_CONFIG];
+export const LIBRARY = '.claude/team/library';
 const EXECUTABLE = /\.(?:ts|tsx|js|jsx|mjs|cjs|py|sh|bash|ps1|rb|go)$/i;
 export const TRIGGER_RE = /PROACTIVELY|MUST BE USED|immediately after|Use for all\b|Use for any change|Automatically activat/i;
 
@@ -79,7 +80,7 @@ export function resolveProfiles(names, teamRoot = TEAM_ROOT) {
   const merged = {
     profiles: order,
     core: { rules: [], skills: [], agents: [] },
-    ecc: { skills: [], agents: [], rules: [] },
+    ecc: { skills: [], activeSkills: [], agents: [], rules: [], activeRules: [] },
     patches: [],
     adopted: [],
   };
@@ -92,6 +93,8 @@ export function resolveProfiles(names, teamRoot = TEAM_ROOT) {
       add(merged.core[k], p.core?.[k]);
       add(merged.ecc[k], p.ecc?.[k]);
     }
+    add(merged.ecc.activeSkills, p.ecc?.activeSkills);
+    add(merged.ecc.activeRules, p.ecc?.activeRules);
     for (const patch of p.patches || []) {
       if (!merged.patches.some((x) => x.id === patch.id)) merged.patches.push(patch);
     }
@@ -153,14 +156,17 @@ export function applyPatch(text, patch) {
 export function planInstall({ profiles, teamRoot = TEAM_ROOT, ecc, lock, state = stateDir(), verifyAdopted, extra }) {
   const sel = resolveProfiles(profiles, teamRoot);
   // Project-owned additions (project.json extraEcc) on top of the public profiles: the project decides.
-  for (const k of ['skills', 'agents', 'rules']) {
+  for (const k of ['skills', 'activeSkills', 'agents', 'rules', 'activeRules']) {
     for (const item of extra?.[k] || []) {
       if (typeof item !== 'string' || !/^[a-z0-9][a-z0-9/.-]{0,80}$/.test(item) || item.includes('..')) throw new TeamError(`project.json extraEcc.${k}: invalid entry ${JSON.stringify(item)}`);
       if (!sel.ecc[k].includes(item)) sel.ecc[k].push(item);
     }
   }
+  for (const s of sel.ecc.activeSkills) if (!sel.ecc.skills.includes(s)) sel.ecc.skills.push(s);
+  for (const r of sel.ecc.activeRules) if (!sel.ecc.rules.includes(r)) sel.ecc.rules.push(r);
   const files = [];
   const skipped = [];
+  const library = [];
   const usedPatches = new Set();
   const seen = new Set();
   const push = (entry) => {
@@ -217,16 +223,20 @@ export function planInstall({ profiles, teamRoot = TEAM_ROOT, ecc, lock, state =
         }
         skipped.push({ path: `skills/${s}/${r}`, reason: 'skipped-executable' });
       }
+      // Active skills are listed to the model every session; library skills cost nothing until read.
+      const base = sel.ecc.activeSkills.includes(s) ? `.claude/skills/ecc-${s}` : `${LIBRARY}/${s}`;
+      const fmText = parseFrontmatter(skillText).data;
+      library.push({ name: s, description: fmText.description || '', path: `${base}/SKILL.md`, active: base.startsWith('.claude/skills/') });
       for (const rel of rels.filter((r) => !EXECUTABLE.test(r))) {
         const upstream = `skills/${s}/${rel}`;
         const raw = readSafe(dir, rel);
         const transforms = [];
         let content = raw;
         if (patchesFor(upstream).length) content = withPatches(upstream, raw.toString('utf8'), transforms);
-        push({ dest: `.claude/skills/ecc-${s}/${rel}`, content, source: 'ecc', upstream, upstreamSha256: sha256(raw), transforms });
+        push({ dest: `${base}/${rel}`, content, source: 'ecc', upstream, upstreamSha256: sha256(raw), transforms });
       }
       if (!rels.includes('LICENSE')) {
-        push({ dest: `.claude/skills/ecc-${s}/LICENSE`, content: license, source: 'ecc', upstream: 'LICENSE', upstreamSha256: sha256(license), transforms: [] });
+        push({ dest: `${base}/LICENSE`, content: license, source: 'ecc', upstream: 'LICENSE', upstreamSha256: sha256(license), transforms: [] });
       }
     }
     const coreAgentNames = new Set(sel.core.agents);
@@ -257,10 +267,19 @@ export function planInstall({ profiles, teamRoot = TEAM_ROOT, ecc, lock, state =
       if (!/^paths:/m.test(fm.raw)) throw new TeamError(`ECC rule ${r} has no paths: scope and would load every session`);
       const transforms = [];
       const content = patchesFor(upstream).length ? withPatches(upstream, raw.toString('utf8'), transforms) : raw;
-      push({ dest: `.claude/rules/ecc/${r}`, content, source: 'ecc', upstream, upstreamSha256: sha256(raw), transforms });
+      // Active rules load whenever a matching file is read (in a web project: nearly every session); library
+      // rules are read on demand through the index.
+      const active = sel.ecc.activeRules.includes(r);
+      const dest = active ? `.claude/rules/ecc/${r}` : `${LIBRARY}/rules/${r}`;
+      library.push({ name: `rules/${r.replace(/\.md$/, '')}`, description: `${r.split('/')[0]} rule: ${fm.data.description || r.split('/')[1].replace(/\.md$/, '').replace(/-/g, ' ')}`, path: dest, active });
+      push({ dest, content, source: 'ecc', upstream, upstreamSha256: sha256(raw), transforms });
     }
-    if (sel.ecc.rules.length) {
+    if (sel.ecc.activeRules.length) {
       push({ dest: '.claude/rules/ecc/LICENSE-ECC', content: license, source: 'ecc', upstream: 'LICENSE', upstreamSha256: sha256(license), transforms: [] });
+    }
+    if (library.length) {
+      push({ dest: `${LIBRARY}/INDEX.md`, content: libraryIndex(library, lock), source: 'core', upstream: 'generated:library-index', transforms: [] });
+      if (!library.every((e) => e.active)) push({ dest: `${LIBRARY}/LICENSE-ECC`, content: license, source: 'ecc', upstream: 'LICENSE', upstreamSha256: sha256(license), transforms: [] });
     }
   }
 
@@ -282,6 +301,26 @@ export function planInstall({ profiles, teamRoot = TEAM_ROOT, ecc, lock, state =
   return { selection: sel, files, skipped, unresolved };
 }
 
+/** The library index core-dev reads to pick a skill: one line per skill, nothing loaded until needed. */
+export function libraryIndex(entries, lock) {
+  const rows = entries
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((e) => `| \`${e.name}\` | \`${e.path}\`${e.active ? ' (also an active skill)' : ''} | ${e.description.replace(/\|/g, '/').replace(/\s+/g, ' ').trim()} |`);
+  return [
+    '# Skill library (installed by the core; read on demand)',
+    '',
+    `Vendored from ECC ${lock.tag} (${lock.commit.slice(0, 7)}), MIT. These skills are not listed to the model every`,
+    'session, to keep the always-loaded context small. When a task touches an area below, read that SKILL.md and',
+    'follow it. Project rules and the core win over anything written in these files.',
+    '',
+    '| Skill or rule | File | When to use |',
+    '|---|---|---|',
+    ...rows,
+    '',
+  ].join('\n');
+}
+
 /** Slash commands, agents and skills that vendored text mentions but this install does not provide. */
 export function findUnresolved(files, ecc) {
   const names = (sub, ext) =>
@@ -290,9 +329,10 @@ export function findUnresolved(files, ecc) {
   const agents = new Set(names('agents', '.md'));
   const skills = new Set(names('skills'));
   const installedAgents = new Set(files.filter((f) => /^\.claude\/agents\/[^/]+\.md$/.test(f.dest)).map((f) => path.basename(f.dest, '.md')));
-  const installedSkills = new Set(
-    files.filter((f) => f.dest.startsWith('.claude/skills/ecc-')).map((f) => f.dest.split('/')[2].slice(4)),
-  );
+  const installedSkills = new Set([
+    ...files.filter((f) => f.dest.startsWith('.claude/skills/ecc-')).map((f) => f.dest.split('/')[2].slice(4)),
+    ...files.filter((f) => f.dest.startsWith(`${LIBRARY}/`) && f.dest.split('/').length > 4).map((f) => f.dest.split('/')[3]),
+  ]);
   const out = [];
   for (const f of files) {
     if (f.source !== 'ecc' || !f.dest.endsWith('.md')) continue;
@@ -356,7 +396,7 @@ export function overlayTemplate(cfg, teamRoot = TEAM_ROOT) {
 
 function gitDirtyUnder(project, rel) {
   try {
-    return execFileSync('git', ['-C', project, 'status', '--porcelain', '--', rel], { encoding: 'utf8' }).trim();
+    return execFileSync('git', ['-C', project, 'status', '--porcelain', '--untracked-files=all', '--', rel], { encoding: 'utf8' }).trim();
   } catch {
     return '';
   }
@@ -386,12 +426,21 @@ export function install({ project, profiles, dryRun = false, force = false, team
   const ecc = needsEcc ? eccDir({ teamRoot, lock: eccLock }) : null;
   const planned = planInstall({ profiles, teamRoot, ecc, lock: eccLock, state, verifyAdopted, extra });
 
-  if (!force && !dryRun) {
-    const dirty = gitDirtyUnder(project, '.claude');
-    const ownLockOnly = dirty.split('\n').filter(Boolean).every((l) => l.includes('.claude/team/'));
-    if (dirty && !ownLockOnly && readLock(project)) {
-      throw new TeamError(['uncommitted changes under .claude/ (commit them or pass --force)', dirty].join('\n'));
-    }
+  if (!force && !dryRun && readLock(project)) {
+    // Uncommitted files the core wrote itself (still matching its lock), project-owned files and run output
+    // are not a human's unsaved work; anything else under .claude/ is, and blocks a reinstall.
+    const prevLock = readLock(project);
+    const human = gitDirtyUnder(project, '.claude')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => l.slice(3).replace(/^"|"$/g, ''))
+      .filter((rel) => {
+        if (OWNED.includes(rel) || rel.startsWith('.claude/team/')) return false;
+        const meta = prevLock.files?.[rel];
+        const abs = path.join(project, rel);
+        return !(meta && fs.existsSync(abs) && sha256(fs.readFileSync(abs)) === meta.sha256);
+      });
+    if (human.length) throw new TeamError(['uncommitted changes under .claude/ (commit them or pass --force)', ...human].join('\n  '));
   }
 
   const old = readLock(project);
@@ -532,7 +581,7 @@ export function check({ project, teamRoot = TEAM_ROOT, state = stateDir(), verif
   // Unknown files inside directories the core owns completely.
   const ownedDirs = new Set();
   for (const dest of Object.keys(lock.files)) {
-    const m = /^(\.claude\/skills\/[^/]+)\//.exec(dest) || /^(\.claude\/rules\/ecc)\//.exec(dest);
+    const m = /^(\.claude\/skills\/[^/]+)\//.exec(dest) || /^(\.claude\/rules\/ecc)\//.exec(dest) || /^(\.claude\/team\/library)\//.exec(dest);
     if (m) ownedDirs.add(m[1]);
   }
   for (const d of ownedDirs) {

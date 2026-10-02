@@ -1,6 +1,6 @@
 ---
 name: core-verifier
-description: Read-only verifier of the core dev team. Runs this project's gate commands through the core CLI, reports a gate table with commands, exit codes and test counts, and never edits files. Use after implementation and after every fix round, or when an independent check of a done claim is needed.
+description: Read-only verifier that runs the project's gates through the core CLI and reports a gate table; never edits. Use after implementation, after fix rounds, or to check a done claim independently.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

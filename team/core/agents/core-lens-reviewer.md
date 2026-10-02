@@ -1,6 +1,6 @@
 ---
 name: core-lens-reviewer
-description: Read-only adversarial reviewer of the core dev team that examines a plan or a diff through exactly one named lens (failure-path, data-scope, contract-coverage, config-sequencing, or a plan-review perspective) and returns located findings. Use from the core-review skill, one invocation per lens, in parallel.
+description: Read-only adversarial reviewer for exactly one named lens (failure-path, data-scope, contract-coverage, config-sequencing or a plan perspective), returning located findings. Use from core-review, one per lens.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

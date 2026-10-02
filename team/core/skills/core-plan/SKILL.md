@@ -1,6 +1,6 @@
 ---
 name: core-plan
-description: Premise check and plan for a development task in the core dev team. Confirms the task's claim against the live code today, records the estimate before the first edit, and writes acceptance criteria, files, risks and a size budget. Use from core-dev at the premise and plan stages.
+description: Premise check against live code and the task plan with acceptance criteria and an estimate recorded before the first edit. Use from core-dev.
 ---
 
 # core-plan

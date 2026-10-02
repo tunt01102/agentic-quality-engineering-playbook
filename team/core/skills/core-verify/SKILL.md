@@ -1,6 +1,6 @@
 ---
 name: core-verify
-description: Runs this project's own gates (lint, tests, build, project checks) through the core CLI, which writes a receipt keyed to the commit with exit codes, test counts and output hashes. Use from core-dev at the verify stage, after every fix round, and before done.
+description: Runs the project's own gates through the core CLI and keeps a signed receipt. Use after implementing, after each fix round and before done.
 ---
 
 # core-verify

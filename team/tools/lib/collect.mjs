@@ -106,6 +106,8 @@ export function evaluate({ state = stateDir(), teamRoot = TEAM_ROOT, clock = Dat
       for (const f of agentFilesOf(projectRoot)) known.add(path.basename(f, '.md'));
       const sk = path.join(projectRoot, '.claude', 'skills');
       if (fs.existsSync(sk)) for (const d of fs.readdirSync(sk)) known.add(d.replace(/^ecc-/, ''));
+      const lib = path.join(projectRoot, '.claude', 'team', 'library');
+      if (fs.existsSync(lib)) for (const d of fs.readdirSync(lib)) known.add(d); // on-demand skills count as installed
     }
     const s = scoreAgent(text, { known, allKnown: projectRoot ? allKnown : new Set() });
     const prev = agents.get(name);

@@ -1,6 +1,6 @@
 ---
 name: core-review
-description: Multi-lens adversarial review for the core dev team, of a plan before code or of the final diff before done. Dispatches one read-only reviewer per lens in parallel, plus the stack reviewers the profile installed, and records every finding with severity and disposition. Use from core-dev at the plan-review and review stages, or when asked to review a diff.
+description: Multi-lens adversarial review of a plan or a final diff, one read-only reviewer per lens, findings recorded with location and disposition. Use from core-dev or to review a diff.
 ---
 
 # core-review
@@ -31,7 +31,7 @@ Review the final diff (`git diff <base>...HEAD` plus uncommitted changes). Run i
      tests fail if the change were reverted.
   4. **config-sequencing**: does a default, env var or flag arm something that does not exist yet;
      ordering against other deploys.
-- The profile reviewers that match the diff: `typescript-reviewer` for TS/JS, `react-reviewer` for
+- The installed reviewers that match the diff: `typescript-reviewer` for TS/JS, `react-reviewer` for
   components, `security-reviewer` for security-sensitive code, `silent-failure-hunter` for error
   handling, `pr-test-analyzer` for tests, `seo-specialist` for pages and content.
 

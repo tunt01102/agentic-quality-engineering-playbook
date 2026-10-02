@@ -2,14 +2,49 @@
   "name": "core",
   "description": "Universal core: router, plan, review, verify, done, improve; ECC planning, review and quality skills and agents.",
   "core": {
-    "rules": ["core-team.md"],
-    "skills": ["core-dev", "core-plan", "core-review", "core-verify", "core-done", "core-improve"],
-    "agents": ["core-verifier", "core-lens-reviewer"]
+    "rules": [
+      "core-team.md"
+    ],
+    "skills": [
+      "core-dev",
+      "core-plan",
+      "core-review",
+      "core-verify",
+      "core-done",
+      "core-improve"
+    ],
+    "agents": [
+      "core-verifier",
+      "core-lens-reviewer"
+    ]
   },
   "ecc": {
-    "skills": ["search-first", "council", "tdd-workflow", "verification-loop", "security-review", "coding-standards", "architecture-decision-records", "codebase-onboarding", "santa-method", "iterative-retrieval", "agentic-engineering", "error-handling", "api-design"],
-    "agents": ["planner", "architect", "code-architect", "code-explorer", "code-reviewer", "typescript-reviewer", "security-reviewer", "silent-failure-hunter", "pr-test-analyzer", "type-design-analyzer", "comment-analyzer", "code-simplifier", "build-error-resolver"],
-    "rules": []
+    "skills": [
+      "search-first",
+      "council",
+      "tdd-workflow",
+      "verification-loop",
+      "security-review",
+      "coding-standards",
+      "architecture-decision-records",
+      "codebase-onboarding",
+      "santa-method",
+      "iterative-retrieval",
+      "agentic-engineering",
+      "error-handling",
+      "api-design"
+    ],
+    "agents": [
+      "planner",
+      "architect",
+      "typescript-reviewer",
+      "security-reviewer",
+      "silent-failure-hunter",
+      "pr-test-analyzer",
+      "build-error-resolver"
+    ],
+    "rules": [],
+    "activeSkills": []
   },
   "patches": [
     {
@@ -32,6 +67,7 @@
     "skills/click-path-audit": "calls commands from another plugin",
     "skills/orch-*, dev-team, team-builder": "depend on agents and commands outside a subset",
     "skills/delivery-gate, gateguard, plankton-code-quality, config-gc, continuous-learning*, strategic-compact, safety-guard, ck": "edit hooks or global settings",
-    "skills/documentation-lookup, council-multi-model, security-scan, configure-ecc": "send content to external services or run unpinned remote code"
+    "skills/documentation-lookup, council-multi-model, security-scan, configure-ecc": "send content to external services or run unpinned remote code",
+    "agents/code-architect, code-explorer, code-reviewer, comment-analyzer, type-design-analyzer, code-simplifier": "context budget: overlap with planner, architect, the core lens reviewer, typescript-reviewer and built-in commands; every installed agent's description is loaded every session"
   }
 }

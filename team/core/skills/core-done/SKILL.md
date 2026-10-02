@@ -1,6 +1,6 @@
 ---
 name: core-done
-description: The done gate of the core dev team. Checks the done predicate against receipts and review records, then closes the task record that the core collector scores. Use from core-dev as the last stage of every task, including partial, blocked and refuted ones.
+description: The done gate: checks receipts and reviews, then closes the task record the core scores. Use as the last stage of every task, including partial or blocked ones.
 ---
 
 # core-done

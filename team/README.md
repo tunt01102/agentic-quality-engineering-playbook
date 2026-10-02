@@ -22,7 +22,8 @@ The install adds files under `.claude/` only:
 |---|---|---|
 | `rules/core-team.md` | core | always loaded: precedence and the "every development task goes through `core-dev`" rule |
 | `skills/core-*`, `agents/core-*` | core | router, plan, review, verify, done, improve; verifier and lens reviewer |
-| `skills/ecc-*`, ECC agents, `rules/ecc/` | core (vendored) | the profile's ECC subset, byte-identical except recorded patches |
+| `team/library/` | core (vendored) | the profile's ECC skills and rules, read on demand through `INDEX.md`; byte-identical except recorded patches |
+| ECC agents (`agents/*.md`) | core (vendored) | the reviewers, planners and build fixers the pipeline dispatches |
 | `team/lock.json` | core | every installed file with its sha256 and source |
 | `settings.json` | project, created if absent | a `UserPromptSubmit` hook that reminds every session of `core-dev` |
 | `rules/core-project.md` | project, created if absent | the project's overlay: where its rules live, its gates, its stage rules |

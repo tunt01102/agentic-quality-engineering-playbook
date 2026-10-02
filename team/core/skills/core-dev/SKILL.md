@@ -1,6 +1,6 @@
 ---
 name: core-dev
-description: Entry point of the core dev team for every development task - feature, change, bug fix, refactor, shipped content, code review, investigation, deployment or hotfix. Classifies the task, reads the project rules first, picks the pipeline stages, the agents and the skills, and states what done requires. Use before planning or editing code in this repository.
+description: Start here for every development task (feature, change, fix, refactor, shipped content, review, deploy): reads the project rules, picks stages, agents and skills, and states what done needs.
 ---
 
 # core-dev: the router
@@ -37,30 +37,26 @@ is split before it starts.
 | Stage | Use | Notes |
 |---|---|---|
 | premise | `core-plan` | confirm the claim against the live code or data today: confirmed, plausible or refuted. Refuted stops the task. |
-| plan | `core-plan`, agents `planner`, `architect`, `code-explorer`, `code-architect` | acceptance criteria, files, risks, estimate in minutes |
+| plan | `core-plan`, agents `planner`, `architect` | acceptance criteria, files, risks, estimate in minutes |
 | plan review | `core-review` (plan mode) | medium and large tasks; before the first edit |
-| implement | `ecc-tdd-workflow`, the stack skills below | test first where the project has tests |
+| implement | library `tdd-workflow` and the stack skills in the library | test first where the project has tests |
 | build broken | agents `build-error-resolver`, `react-build-resolver` | smallest change that makes the build pass |
 | verify | `core-verify`, agent `core-verifier` | the project's own gates, from `project.json` |
 | review | `core-review` | four lenses plus the profile reviewers, on the final diff |
 | done | `core-done` | the done predicate, then one task record |
 
-Stack skills, load when the task touches the area (only the installed ones exist):
+The skill library: `.claude/team/library/INDEX.md` lists every vendored ECC skill with its file and when to
+use it (testing, React, Vite, accessibility, API design, error handling, security review, SEO, i18n,
+articles, LLM cost and evaluation, architecture decisions, adversarial checks). They are not loaded every
+session. When the task touches one of those areas, read the matching `SKILL.md` from the library and follow
+it. The index also lists coding rules by language (`rules/typescript/*`, `rules/react/*`, `rules/web/*`): read
+the ones for the files you are about to change before the first edit of a session. Projects add more through
+`extraEcc` in `.claude/team/project.json`.
 
-- API, server routes, errors: `ecc-api-design`, `ecc-error-handling`, `ecc-contract-first`
-- React UI: `ecc-react-patterns`, `ecc-frontend-patterns`, `ecc-react-performance`, `ecc-react-testing`
-- Build tooling: `ecc-vite-patterns`, `ecc-nextjs-turbopack`
-- Accessibility and UX checks: `ecc-accessibility`, `ecc-frontend-a11y`, `ecc-click-path-audit`
-- End-to-end: `ecc-e2e-testing`
-- Security-sensitive code (auth, payments, uploads, user input, secrets): `ecc-security-review` and agent `security-reviewer`
-- SEO, multilingual content: `ecc-seo`, `ecc-i18n-sync`, `ecc-article-writing`, `ecc-brand-voice`, agent `seo-specialist`
-- LLM features (chatbots, prompts, evals, cost): `ecc-cost-aware-llm-pipeline`, `ecc-eval-harness`, `ecc-ai-regression-testing`
-- Unfamiliar area: `ecc-search-first`, `ecc-codebase-onboarding`, `ecc-iterative-retrieval`
-- Hard decision with real trade-offs: `ecc-council`; adversarial check of a finished artefact: `ecc-santa-method`
-- Lasting design decision: `ecc-architecture-decision-records`
+Security-sensitive code (auth, payments, uploads, user input, secrets): the library's `security-review`
+skill and the `security-reviewer` agent are mandatory.
 
-Projects may install more ECC skills through `extraEcc` in `.claude/team/project.json`; use them where they fit.
-If a skill or agent named here is not installed, it is not part of this project's profile: carry on
+If a skill or agent named anywhere is not installed, it is not part of this project's profile: carry on
 without it and say so, never invent its content.
 
 ## Step 3: report

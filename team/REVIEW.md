@@ -23,9 +23,18 @@ Accepted limits, stated in the design: the trust scan is advisory (homoglyphs pa
 control); a receipt signature stops hand-written receipts but not an agent that reads the key; review
 findings are agent-entered and marked self-reported.
 
+## Round 3: rollout measurement
+
+The first install into the three target projects measured +24 to +27% always-loaded context (+35 to +38%
+after reading one TS file) against a +10% budget. Fixed by moving ECC skills and rules into an on-demand
+library, trimming agents to the roles the pipeline dispatches and shortening always-loaded text; remeasured at
++7.5 to +8.5% in both cases (SDD section 6.1). A four-lens review of the rollout diffs found no critical or high
+issue; its medium and low findings (placeholder evidence, an ignored local settings file, a deploy-log
+wording that could soften a deployment check, a build prerequisite) were fixed in the projects.
+
 ## Evidence
 
-- `node --test 'team/tools/tests/*.test.mjs'`: 137 passed, 0 failed (run three times without a flake).
+- `node --test 'team/tools/tests/*.test.mjs'`: 142 passed, 0 failed (run three times without a flake).
 - Mutation run: 34 of 34 mutants killed.
 - `bash tools/publish-check.sh`: 0 findings.
 - Dashboard checked in a real browser at 1280 and 375 pixels, light and dark: no runtime errors, no
