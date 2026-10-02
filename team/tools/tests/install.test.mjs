@@ -308,3 +308,16 @@ test('adopted skills from project.json install into the library and the index, v
   fs.appendFileSync(path.join(state, `adopted/${id}/SKILL.md`), 'tampered\n');
   assert.throws(() => run({ verifyAdopted }), /failed verification/);
 });
+
+test('regression: an uncommitted edit to a project-owned file does not block a reinstall', () => {
+  const { project, run } = setup();
+  run();
+  commitAll(project);
+  const cfgFile = path.join(project, '.claude/team/project.json');
+  const cfg = readJson(cfgFile);
+  cfg.notes = 'edited by the project';
+  fs.writeFileSync(cfgFile, JSON.stringify(cfg));
+  assert.ok(run(), 'project.json is project-owned');
+  write(project, '.claude/agents/hand-made.md', 'x\n');
+  assert.throws(() => run(), /\.claude\/agents\/hand-made\.md/, 'the human file is named with its full path');
+});

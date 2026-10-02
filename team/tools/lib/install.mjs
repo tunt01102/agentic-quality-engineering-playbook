@@ -407,7 +407,8 @@ export function overlayTemplate(cfg, teamRoot = TEAM_ROOT) {
 
 function gitDirtyUnder(project, rel) {
   try {
-    return execFileSync('git', ['-C', project, 'status', '--porcelain', '--untracked-files=all', '--', rel], { encoding: 'utf8' }).trim();
+    // trimEnd only: porcelain lines start with a status column that may be a space (" M path").
+    return execFileSync('git', ['-C', project, 'status', '--porcelain', '--untracked-files=all', '--', rel], { encoding: 'utf8' }).trimEnd();
   } catch {
     return '';
   }
