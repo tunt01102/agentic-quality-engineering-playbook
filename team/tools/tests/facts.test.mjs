@@ -85,7 +85,7 @@ test('refreshFacts rescores a task once its CI is known and writes coverage', ()
   const head = commit('b');
   const stray = commit('c'); // a later commit made outside any task
   const state = tmp('core-state-');
-  write(state, 'registry.json', JSON.stringify({ projects: { app: { path: dir } } }));
+  write(state, 'registry.json', JSON.stringify({ projects: { app: { path: dir, firstInstalledAt: '2000-01-01T00:00:00.000Z' } } }));
   const rec = record({ startHead: start, head });
   write(state, 'tasks.jsonl', JSON.stringify({ ...rec, ...scoreTask(rec) }) + '\n');
   write(dir, '.claude/team/ledger.jsonl', JSON.stringify(rec) + '\n');
@@ -115,4 +115,12 @@ test('findings trend needs five tasks', () => {
   const t = (n, i) => ({ score: 90, ts: `2026-10-0${i}`, review: { findings: Array(n).fill({}) } });
   assert.equal(findingsTrend([t(1, 1), t(2, 2)]).medianFindings, null);
   assert.equal(findingsTrend([t(1, 1), t(2, 2), t(3, 3), t(4, 4), t(5, 5)]).medianFindings, 3);
+});
+
+test('coverage counts only commits since the core was installed', () => {
+  const { dir, commit } = repo();
+  commit('old');
+  const cutoff = new Date(Date.now() + 2000).toISOString();
+  assert.equal(coverageFor(dir, []).unrecorded, 1);
+  assert.equal(coverageFor(dir, [], { since: cutoff }).unrecorded, 0, 'commits before the install are not counted');
 });

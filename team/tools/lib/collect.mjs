@@ -303,8 +303,10 @@ export function ciFor(project, rec, { gh = defaultGh, env = {} } = {}) {
 }
 
 /** Recent commits that no task record covers (work that skipped the core), excluding merges and bots. */
-export function coverageFor(project, records, { days = 30 } = {}) {
-  const log = gitIn(project, ['log', `--since=${days}.days`, '--no-merges', '--format=%H%x09%ae%x09%s']);
+export function coverageFor(project, records, { days = 30, since = null } = {}) {
+  // Count only work done since the core was installed (or the last `days`, whichever is later).
+  const floor = Math.max(Date.now() - days * 86400000, since ? Date.parse(since) || 0 : 0);
+  const log = gitIn(project, ['log', `--since=${new Date(floor).toISOString()}`, '--no-merges', '--format=%H%x09%ae%x09%s']);
   if (log === null) return { status: 'unknown' };
   const covered = new Set(records.flatMap((r) => taskCommits(project, r)));
   const commits = log
@@ -316,6 +318,7 @@ export function coverageFor(project, records, { days = 30 } = {}) {
   return {
     status: 'ok',
     days,
+    since: new Date(floor).toISOString(),
     commits: commits.length,
     unrecorded: unrecorded.length,
     sample: unrecorded.slice(0, 5).map(([sha, , subject]) => `${sha.slice(0, 7)} ${clip(subject, 80)}`),
@@ -354,7 +357,8 @@ export function refreshFacts(state, { gh, now = Date.now(), tokenFor = defaultTo
   for (const [name, p] of Object.entries(reg.projects || {})) {
     if (!fs.existsSync(p.path)) continue;
     const ledger = readJsonl(path.join(p.path, '.claude', 'team', 'ledger.jsonl')).records;
-    coverage[name] = coverageFor(p.path, ledger);
+    const firstRecord = ledger.map((r) => r.startedAt).filter(Boolean).sort()[0];
+    coverage[name] = coverageFor(p.path, ledger, { since: p.firstInstalledAt || firstRecord || null });
   }
   writeAtomic(path.join(state, 'coverage.json'), JSON.stringify({ ts: nowIso(), projects: coverage }, null, 2) + '\n');
   return { ciUpdated: changed, coverage };

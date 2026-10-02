@@ -563,7 +563,7 @@ export function registerProject({ state, project, lock, check, clock = Date.now 
   reg.projects[name] = {
     ...prev,
     path: project,
-    ...(lock ? { profiles: lock.requested || lock.profiles, coreVersion: lock.coreVersion, eccCommit: lock.ecc.commit, installedAt: lock.installedAt } : {}),
+    ...(lock ? { profiles: lock.requested || lock.profiles, coreVersion: lock.coreVersion, eccCommit: lock.ecc.commit, installedAt: lock.installedAt, firstInstalledAt: prev.firstInstalledAt || lock.installedAt } : {}),
     ...(check ? { lastCheck: { ts: nowIso(clock), status: check.status, problems: check.problems.length } } : {}),
   };
   writeJson(file, reg);
