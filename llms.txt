@@ -10,6 +10,7 @@
 - [TIPS.md](TIPS.md): general tips for working with an AI assistant, each with why and how
 
 ## Reuse
+- [team/README.md](team/README.md): the core dev team, installable into any project; design in [team/SDD.md](team/SDD.md)
 - [templates/lesson.md](templates/lesson.md): the lesson format
 - [templates/review.schema.json](templates/review.schema.json): JSON schema of the end-of-day review, including estimate vs actual
 - [templates/day-plan.schema.json](templates/day-plan.schema.json): JSON schema of the day plan, including the two estimates

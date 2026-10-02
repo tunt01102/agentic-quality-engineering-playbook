@@ -1,0 +1,5 @@
+{
+  "name": "ai-llm",
+  "description": "Products with LLM features: chatbots, prompts, evaluations, cost control.",
+  "ecc": { "skills": ["cost-aware-llm-pipeline", "ai-regression-testing", "regex-vs-llm-structured-text", "agent-harness-construction", "agent-introspection-debugging"], "agents": ["mle-reviewer"] }
+}

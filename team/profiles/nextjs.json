@@ -1,0 +1,1 @@
+{ "name": "nextjs", "description": "Next.js projects that build with Turbopack (not webpack builds).", "ecc": { "skills": ["nextjs-turbopack"] } }

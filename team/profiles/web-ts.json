@@ -1,0 +1,46 @@
+{
+  "name": "web-ts",
+  "description": "TypeScript web apps: React front end, Node server, accessibility, end-to-end checks. Projects add server-side skills through extraEcc in their project.json.",
+  "extends": [
+    "core"
+  ],
+  "ecc": {
+    "skills": [
+      "frontend-patterns",
+      "react-patterns",
+      "react-testing",
+      "react-performance",
+      "e2e-testing",
+      "accessibility",
+      "frontend-a11y",
+      "production-audit",
+      "contract-first"
+    ],
+    "agents": [
+      "react-reviewer",
+      "react-build-resolver",
+      "a11y-architect"
+    ],
+    "rules": [
+      "typescript/coding-style.md",
+      "typescript/patterns.md",
+      "typescript/security.md",
+      "typescript/testing.md",
+      "web/coding-style.md",
+      "web/design-quality.md",
+      "web/patterns.md",
+      "web/performance.md",
+      "web/security.md",
+      "web/testing.md",
+      "react/coding-style.md",
+      "react/patterns.md",
+      "react/security.md",
+      "react/testing.md",
+      "react/hooks.md"
+    ]
+  },
+  "excluded": {
+    "rules/typescript/hooks.md": "tells the reader to edit global settings",
+    "rules/web/hooks.md": "a Stop hook that runs a build"
+  }
+}

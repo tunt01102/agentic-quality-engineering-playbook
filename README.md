@@ -26,6 +26,7 @@ on any project, with any capable assistant, can pick it up.
 | [TIPS.md](TIPS.md) | Reusable tips for working effectively with an AI assistant, each with a why and a how | anyone, any project |
 | [templates/](templates/) | The lesson format and the JSON schemas of the day plan and the end-of-day review, for reuse | AIs and tool builders |
 | [llms.txt](llms.txt) | A short machine-oriented index of this repository | AIs |
+| [team/](team/README.md) | The core dev team: an installable set of Claude Code agents and skills built from this method and a pinned ECC subset, with self-scoring, skill scouting and a local dashboard ([design](team/SDD.md)) | AIs and tool builders |
 
 ## How this repository is maintained
 

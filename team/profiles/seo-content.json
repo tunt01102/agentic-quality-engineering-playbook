@@ -1,0 +1,5 @@
+{
+  "name": "seo-content",
+  "description": "Multilingual SEO pages, articles and brand copy that ship with the product.",
+  "ecc": { "skills": ["seo", "i18n-sync", "article-writing", "brand-voice", "content-engine"], "agents": ["seo-specialist"] }
+}

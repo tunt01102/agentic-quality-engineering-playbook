@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="core-key" content="">
+<meta name="color-scheme" content="light dark">
+<title>Core dev team</title>
+<link rel="stylesheet" href="/app.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+<header class="top">
+  <h1>Core dev team</h1>
+  <span id="version" class="muted"></span>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button type="button" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button type="button" role="tab" data-tab="tasks" aria-selected="false">Tasks</button>
+    <button type="button" role="tab" data-tab="agents" aria-selected="false">Agents</button>
+    <button type="button" role="tab" data-tab="scout" aria-selected="false">Scout</button>
+    <button type="button" role="tab" data-tab="schedules" aria-selected="false">Schedules</button>
+  </nav>
+</header>
+<main>
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+
+  <section id="tab-overview" class="tab" role="tabpanel">
+    <div class="cards">
+      <article class="card">
+        <h2>Projects using the core</h2>
+        <p class="big" id="project-count"></p>
+      </article>
+      <article class="card wide">
+        <h2>Quality index</h2>
+        <p class="muted small">Static rubric mean and 30-day median task score, shown side by side, never blended.</p>
+        <div id="index-chart" class="chart"></div>
+      </article>
+    </div>
+    <div class="table-wrap"><table id="projects-table"></table></div>
+  </section>
+
+  <section id="tab-tasks" class="tab" role="tabpanel" hidden>
+    <form class="filters" id="task-filters">
+      <label>Project <select id="filter-project"><option value="">All</option></select></label>
+      <label>Class <select id="filter-class"><option value="">All</option></select></label>
+    </form>
+    <p class="muted small">Review data is self-reported. Deltas are shown with the number of comparable tasks (n).</p>
+    <div class="table-wrap"><table id="tasks-table"></table></div>
+    <div id="task-detail" class="detail" hidden></div>
+  </section>
+
+  <section id="tab-agents" class="tab" role="tabpanel" hidden>
+    <p id="agents-meta" class="muted small"></p>
+    <div class="table-wrap"><table id="agents-table"></table></div>
+    <h2>Roadmap</h2>
+    <p id="roadmap-file" class="muted small"></p>
+    <pre id="roadmap" class="roadmap"></pre>
+  </section>
+
+  <section id="tab-scout" class="tab" role="tabpanel" hidden>
+    <p id="scout-meta" class="muted small"></p>
+    <div class="table-wrap"><table id="scout-table"></table></div>
+    <ul id="scout-errors" class="errors"></ul>
+  </section>
+
+  <section id="tab-schedules" class="tab" role="tabpanel" hidden>
+    <form id="schedule-form" class="schedules"></form>
+    <h2>Recent runs</h2>
+    <div class="table-wrap"><table id="runs-table"></table></div>
+  </section>
+</main>
+<template id="svg-proto"><svg class="svg" aria-hidden="true"></svg></template>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "name": "core",
+  "description": "Universal core: router, plan, review, verify, done, improve; ECC planning, review and quality skills and agents.",
+  "core": {
+    "rules": ["core-team.md"],
+    "skills": ["core-dev", "core-plan", "core-review", "core-verify", "core-done", "core-improve"],
+    "agents": ["core-verifier", "core-lens-reviewer"]
+  },
+  "ecc": {
+    "skills": ["search-first", "council", "tdd-workflow", "verification-loop", "security-review", "coding-standards", "architecture-decision-records", "codebase-onboarding", "santa-method", "iterative-retrieval", "agentic-engineering", "error-handling", "api-design"],
+    "agents": ["planner", "architect", "code-architect", "code-explorer", "code-reviewer", "typescript-reviewer", "security-reviewer", "silent-failure-hunter", "pr-test-analyzer", "type-design-analyzer", "comment-analyzer", "code-simplifier", "build-error-resolver"],
+    "rules": []
+  },
+  "patches": [
+    {
+      "id": "build-error-resolver-no-destructive-recipes",
+      "file": "agents/build-error-resolver.md",
+      "search": "# Reinstall dependencies\nrm -rf node_modules package-lock.json && npm install\n\n# Fix ESLint auto-fixable\nnpx eslint . --fix\n",
+      "replace": "# Never delete the lock file or run a repository-wide --fix: use the project's own lint command\n",
+      "reason": "deleting the lock file re-resolves every dependency; a repository-wide --fix rewrites unrelated files"
+    }
+  ],
+  "excluded": {
+    "rules/common/*": "unscoped, always loaded; mandates an 80% coverage gate and conventional commits; points at global settings",
+    "agents/tdd-guide": "mandates an 80% coverage gate",
+    "agents/e2e-runner": "global npm install",
+    "agents/refactor-cleaner": "runs unpinned npx tools the projects do not have",
+    "agents/performance-optimizer": "runs unpinned npx tools and external audits",
+    "agents/harness-optimizer": "edits hooks, settings and permissions",
+    "agents/docs-lookup": "needs an MCP server the projects do not have",
+    "skills/eval-harness": "depends on a shipped script",
+    "skills/click-path-audit": "calls commands from another plugin",
+    "skills/orch-*, dev-team, team-builder": "depend on agents and commands outside a subset",
+    "skills/delivery-gate, gateguard, plankton-code-quality, config-gc, continuous-learning*, strategic-compact, safety-guard, ck": "edit hooks or global settings",
+    "skills/documentation-lookup, council-multi-model, security-scan, configure-ecc": "send content to external services or run unpinned remote code"
+  }
+}
